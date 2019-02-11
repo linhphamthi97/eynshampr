@@ -9,6 +9,7 @@ Inputs: EV battery, settings and datagen variables
 Output: Sum of all the chargerates
 """
 import settings
+import numpy as np
 
 def ChargeRateBalance(evbatt):
     # Initialising variables
@@ -25,7 +26,14 @@ def ChargeRateBalance(evbatt):
         print('EV',n, 'SOC before charging: ',evbatt["EV{0}".format(n)].SOC)
         
         chargerate = settings.pv_energy_profile[settings.hour] * evbatt["EV{0}".format(n)].rel_weigh / total_weigh
-        total_chargerate = total_chargerate + chargerate
+        
+        if evbatt["EV{0}".format(n)].chargetype == 0:       #Slow charge
+            chargerate = np.clip(chargerate,0,settings.slowcharge_ulim)
+        else: 
+            chargerate = np.clip(chargerate,0,settings.fastcharge_ulim)
+        
+        
+        # total_chargerate = total_chargerate + chargerate
                 
         # Charging
         evbatt["EV{0}".format(n)].charge(chargerate,settings.t_inc)
