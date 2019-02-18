@@ -19,9 +19,6 @@ def ChargeRateBalance(evbatt):
     total_chargerate = 0
     SOC_plot=list()
     pv_energy_available = settings.pv_energy_profile[settings.hour]
-    threshold = 5   # The threshold for the energy that can be wasted, ideally 
-                    # it should be zero but as this method only converges, we 
-                    # need to specify a threshold instead
     
     for n in range(1,settings.carnumber+1):
         evbatt["EV{0}".format(n)].chargerate = 0
@@ -31,7 +28,7 @@ def ChargeRateBalance(evbatt):
     # =========================================================================
     
     # Calculating chargerate for each car and charge
-    while pv_energy_available > threshold:
+    while pv_energy_available > 0:
         total_weigh = 0
         
         # Terms for the weighted average
@@ -83,7 +80,7 @@ def ChargeRateBalance(evbatt):
         # For plotting
         SOC_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
         
-    print('Leftover energy: ', pv_energy_available, ' kW')
+    print('Leftover energy: ', np.clip(pv_energy_available, 0, None), ' kW')
     
     # Plotting a graph of the SOC
     y_axis = np.arange(len(SOC_plot)) 

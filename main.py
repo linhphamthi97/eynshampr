@@ -13,8 +13,6 @@ from ChargeRateBalance import ChargeRateBalance
 import settings
 import datagen
 
-total_chargerate = 0
-
 # =============================================================================
 # Generate data and charge vehicles
 # =============================================================================
