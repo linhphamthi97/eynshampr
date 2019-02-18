@@ -13,47 +13,77 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def ChargeRateBalance(evbatt):
+    # =========================================================================
     # Initialising variables
-    total_weigh = 0
+    # =========================================================================
     total_chargerate = 0
-    pv_energy_available = settings.pv_energy_profile[settings.hour]
     SOC_plot=list()
-#    extra_charging=list()
+    pv_energy_available = settings.pv_energy_profile[settings.hour]
+    threshold = 5   # The threshold for the energy that can be wasted, ideally 
+                    # it should be zero but as this method only converges, we 
+                    # need to specify a threshold instead
     
+    for n in range(1,settings.carnumber+1):
+        evbatt["EV{0}".format(n)].chargerate = 0
+
+    # =========================================================================
+    # Determining chargegrates
+    # =========================================================================
     
     # Calculating chargerate for each car and charge
+    while pv_energy_available > threshold:
+        total_weigh = 0
+        
+        # Terms for the weighted average
+        for n in range(1,settings.carnumber+1):
+            
+            # If the charging port is already at its limit, give no weight, otherwise use parameters to determine weighting
+            if (evbatt["EV{0}".format(n)].chargetype == 0 and evbatt["EV{0}".format(n)].chargerate == settings.slowcharge_ulim) \
+                    or (evbatt["EV{0}".format(n)].chargetype == 1 and evbatt["EV{0}".format(n)].chargerate == settings.fastcharge_ulim):
+                evbatt["EV{0}".format(n)].rel_weigh = 0
+            else:
+                evbatt["EV{0}".format(n)].rel_weigh = evbatt["EV{0}".format(n)].fill / evbatt["EV{0}".format(n)].time
+            
+            total_weigh = total_weigh + evbatt["EV{0}".format(n)].rel_weigh
+        
+        # Break out of the while loop if all of the charging ports are at their limit
+        if total_weigh == 0 :
+            break
+            
+        for n in range(1,settings.carnumber+1):
+            # Calculating the chargerate with the weighted division on energy available
+            evbatt["EV{0}".format(n)].chargerate = evbatt["EV{0}".format(n)].chargerate + (pv_energy_available * evbatt["EV{0}".format(n)].rel_weigh / total_weigh)
+            
+            # Implement restrictions on charging rates imposed by charging type
+            if evbatt["EV{0}".format(n)].chargetype == 0:       #Slow charge
+                evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].chargerate,0,settings.slowcharge_ulim)
+            else: 
+                evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].chargerate,0,settings.fastcharge_ulim)
+            
+            
+        pv_energy_available = settings.pv_energy_profile[settings.hour]
+        
+        for n in range(1,settings.carnumber+1):
+            pv_energy_available = pv_energy_available - evbatt["EV{0}".format(n)].chargerate
+                     
+    # =========================================================================
+    # Charging and plotting results
+    # =========================================================================
     for n in range(1,settings.carnumber+1):
         print('EV',n, 'SOC before charging: ',evbatt["EV{0}".format(n)].SOC)
         
-        # Terms for the weighted average
-        for k in range(n,settings.carnumber+1):
-            evbatt["EV{0}".format(k)].rel_weigh = evbatt["EV{0}".format(k)].fill / evbatt["EV{0}".format(k)].time
-            total_weigh = total_weigh + evbatt["EV{0}".format(k)].rel_weigh       
-        
-        evbatt["EV{0}".format(n)].chargerate = pv_energy_available * evbatt["EV{0}".format(n)].rel_weigh / total_weigh
-        
-        # Implement restrictions on charging rates imposed by charging type
-        if evbatt["EV{0}".format(n)].chargetype == 0:       #Slow charge
-            evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].chargerate,0,settings.slowcharge_ulim)
-        else: 
-            evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].chargerate,0,settings.fastcharge_ulim)
-        
-        # Total energy left
-        pv_energy_available = pv_energy_available - evbatt["EV{0}".format(n)].chargerate
-        
-                 
-        # Charging
+        total_chargerate += evbatt["EV{0}".format(n)].chargerate
+               
         evbatt["EV{0}".format(n)].charge(evbatt["EV{0}".format(n)].chargerate,settings.t_inc)
-        
+       
         print('EV',n, 'Chargerate: ', evbatt["EV{0}".format(n)].chargerate)
         print('EV',n, 'SOC after charging: ',evbatt["EV{0}".format(n)].SOC)
         print('')
-        
+               
         # For plotting
         SOC_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
         
- 
-    print('Leftover energy: ', pv_energy_available, ' kWh')
+    print('Leftover energy: ', pv_energy_available, ' kW')
     
     # Plotting a graph of the SOC
     y_axis = np.arange(len(SOC_plot)) 

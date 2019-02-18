@@ -13,7 +13,7 @@ import numpy as np
 # Initializing variables
 # =============================================================================
 # Variables to change
-carnumber = 15
+carnumber = 100
 month = 1
 hour = 9                    # This will be incremented later to simulate passing time
 el_price = 0.13             # Price of electricity, in pounds per kWh
