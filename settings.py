@@ -17,10 +17,10 @@ carnumber = 100
 month = 1
 hour = 9                    # This will be incremented later to simulate passing time
 el_price = 0.13             # Price of electricity, in pounds per kWh
-t_inc=0.05                   # Time increment for the simulation
+t_inc=0.05                  # Time increment for the simulation
 t = range(hour,25)          # Hours in a day
-slowcharge_ulim = 7         # kW charging
-fastcharge_ulim = 22         # kW charging
+slowcharge_ulim = 3         # kW charging
+fastcharge_ulim = 7         # kW charging
 
 #Variables calculated
 pv_energy_profile = np.loadtxt('total_' + str(month) + '_kWh.txt')

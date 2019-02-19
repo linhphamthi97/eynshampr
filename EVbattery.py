@@ -2,7 +2,7 @@
 """
 Created on Sun Feb 10 14:46:35 2019
 
-@author: QUDILIVI
+@author: Linh Pham Thi
 """
 
 class EVbattery:
