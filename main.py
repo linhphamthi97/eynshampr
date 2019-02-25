@@ -9,19 +9,87 @@ author: Linh Pham Thi
 # Importing neccessary Python libraries and modules, initializing variables
 # =============================================================================
 import numpy as np
-from ChargeRateBalance import ChargeRateBalance
 import settings
-import datagen
+import matplotlib.pyplot as plt
+import datetime  
+
+from ChargeRateBalance import ChargeRateBalance
+from datagen import datagen
+from gridEnergyCalculator import gridEnergyCalculator
+
+grid_energy_needed = 0
+pv_leftover_energy = 0
 
 # =============================================================================
-# Generate data and charge vehicles
+# Generate data
 # =============================================================================
-evbatt, total_ev_demand, total_inst_chargerate = datagen.datagen()
-evbatt, total_chargerate = ChargeRateBalance(evbatt)
+evbatt, total_ev_demand, total_inst_chargerate = datagen()
 
+# For showing results
+SOC_before_plot=list()
+for n in range(1,settings.carnumber+1):
+#    print('SOC for EV',n,' before charging: ',evbatt["EV{0}".format(n)].SOC*100,'%')
+    SOC_before_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
+    
 # =============================================================================
-# Calculating how much energy we need to buy from the grid at that moment
+# Simulation
 # =============================================================================
-gridenergy = np.clip((total_chargerate - settings.pv_energy_profile[settings.hour]), 0, None)
+while settings.current_datetime < settings.endtime:
+    # Initialise variables
+    total_chargerate = 0
+    
+    # =========================================================================
+    # Calculating distribution and buy from grid
+    # =========================================================================
+    evbatt, pv_energy_available, pv_leftover_energy = ChargeRateBalance(evbatt, pv_leftover_energy)
+    evbatt, grid_energy_needed = gridEnergyCalculator(evbatt, grid_energy_needed)
+    
+    # =========================================================================
+    # Charging
+    # =========================================================================
+    for n in range(1,settings.carnumber+1):
+        total_chargerate += evbatt["EV{0}".format(n)].chargerate
+        
+        evbatt["EV{0}".format(n)].charge(evbatt["EV{0}".format(n)].chargerate,settings.t_inc,settings.current_datetime)
+    
+    # Incrementing time
+    settings.current_datetime = settings.current_datetime + datetime.timedelta(hours=settings.t_inc)
+    
+# =============================================================================
+# Plotting and showing results
+# =============================================================================
+""" Energy balances """
+print('Leftover energy: ', np.clip(pv_leftover_energy, 0, None), ' kW')
+print('Total energy bought from the grid: ', grid_energy_needed * settings.t_inc, ' kWh')
+print('Cost of energy bought from the grid: ', grid_energy_needed * settings.t_inc * settings.el_price, ' GBP')
 
-print('Energy bought from the grid at that instant: ', gridenergy, ' kW')
+
+""" SOC graphs"""
+SOC_after_plot=list()
+
+for n in range(1,settings.carnumber+1):
+#    print('SOC for EV',n,' after charging: ',evbatt["EV{0}".format(n)].SOC*100,'%')
+    
+    # For plotting
+    SOC_after_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
+
+# Plotting a graph of the SOC
+#Before
+y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
+plt.rcParams["figure.figsize"] = [8,6]
+plt.barh(y_axis, SOC_before_plot)
+plt.ylim(ymin=0)
+plt.title('State of charge of the EVs before charging')
+plt.xlabel('State of charge [%]')
+plt.show()
+
+#After
+y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
+plt.rcParams["figure.figsize"] = [8,6]
+plt.barh(y_axis, SOC_after_plot)
+plt.ylim(ymin=0)
+plt.title('State of charge of the EVs after charging')
+plt.xlabel('State of charge [%]')
+plt.show()
+    
+print('Done')
