@@ -8,7 +8,7 @@ This is a file to generate the random EV states
 """
 import settings
 from EVbattery import EVbattery
-import random
+import numpy as np
 
 def datagen():
     # Initializing variables
@@ -21,7 +21,17 @@ def datagen():
                                 
     # Iterating to generate the EV battery attributes
     for n in range(1,(settings.carnumber+1)):
-            evbatt["EV{0}".format(n)]=EVbattery(32,random.uniform(0,1),random.gauss(7,2),random.randint(0,1))
+            
+            capacity = np.random.gamma(5.66,7)
+            SOC = np.random.beta(2,1.7)
+            time = np.random.normal(10,2.1)
+            
+            if time > 4:
+                ctype = 0 #slow charging takes 8 hours to charge from flat to full
+            else:
+                ctype = 1 #fast charging takes 4 hours to charge from flat to full
+            
+            evbatt["EV{0}".format(n)]=EVbattery(capacity,SOC,time,ctype)
             total_ev_demand = total_ev_demand + evbatt["EV{0}".format(n)].fill
             total_inst_chargerate = total_inst_chargerate + evbatt["EV{0}".format(n)].avg_chargerate
             
