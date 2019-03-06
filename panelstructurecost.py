@@ -7,9 +7,9 @@ Created on Mon Feb 11 00:29:52 2019
 
 """data of upfront costs per bay"""
 def structurecost(num_bays):
-
+    
     fuelins_estimate = 30 
-
+   
     """structure"""
 
     """screw piles £285 each (5% discount applied for orders over 50), 4 required per 3 space bay"""
@@ -38,5 +38,3 @@ def structurecost(num_bays):
 
     structurecost= foundation+construct
     return structurecost
-
-print(structurecost(0.333))
