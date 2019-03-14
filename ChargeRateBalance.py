@@ -5,19 +5,15 @@ Created on Sun Feb 10 22:41:41 2019
 @author: Linh Pham Thi
 
 This file contains the function to balance the charging rates among the charging cars.
-Inputs: EV battery, settings and datagen variables
-Output: Sum of all the chargerates
 """
 import settings
 import numpy as np
-import matplotlib.pyplot as plt
+import sys
 
-def ChargeRateBalance(evbatt):
+def ChargeRateBalance(evbatt,pv_leftover_energy):
     # =========================================================================
     # Initialising variables
     # =========================================================================
-    total_chargerate = 0
-    SOC_plot=list()
     pv_energy_available = settings.pv_energy_profile[settings.hour]
     
     for n in range(1,settings.carnumber+1):
@@ -26,12 +22,18 @@ def ChargeRateBalance(evbatt):
     # =========================================================================
     # Determining chargegrates
     # =========================================================================
-    
-    # Calculating chargerate for each car and charge
+
+    # Reset chargerate to zero if SOC is 1
+    for n in range(1,settings.carnumber+1):
+        if evbatt["EV{0}".format(n)].SOC >= 1:
+            evbatt["EV{0}".format(n)].chargerate = 0
+            evbatt["EV{0}".format(n)].rel_weigh = 0
+
     while pv_energy_available > 0:
         total_weigh = 0
-        
+        # =====================================================================
         # Terms for the weighted average
+        # =====================================================================     
         for n in range(1,settings.carnumber+1):
             
             # If the charging port is already at its limit, give no weight, otherwise use parameters to determine weighting
@@ -41,12 +43,31 @@ def ChargeRateBalance(evbatt):
             else:
                 evbatt["EV{0}".format(n)].rel_weigh = evbatt["EV{0}".format(n)].fill / evbatt["EV{0}".format(n)].time
             
+
+            # Set chargerate to zero if SOC is 1 or if car is not present at the site
+            if evbatt["EV{0}".format(n)].SOC >= 1 or evbatt["EV{0}".format(n)].present == 0:
+                evbatt["EV{0}".format(n)].chargerate = 0
+                evbatt["EV{0}".format(n)].rel_weigh = 0
+
             total_weigh = total_weigh + evbatt["EV{0}".format(n)].rel_weigh
-        
-        # Break out of the while loop if all of the charging ports are at their limit
+            
+            
+        # =====================================================================
+        # Break out of the while loop if all of the charging ports can't be charging or is at their limit
+        # =====================================================================         
         if total_weigh == 0 :
+            # Integrate leftover PV energy during the day by using trapezoidal rule
+            pv_leftover_energy += pv_energy_available * settings.t_inc 
+
+            pv_energy_available = settings.pv_energy_profile[settings.hour]
+            for n in range(1,settings.carnumber+1):
+                pv_energy_available = pv_energy_available - evbatt["EV{0}".format(n)].chargerate            
+            
             break
             
+        # =====================================================================
+        # Calculating charging rates
+        # =====================================================================  
         for n in range(1,settings.carnumber+1):
             # Calculating the chargerate with the weighted division on energy available
             evbatt["EV{0}".format(n)].chargerate = evbatt["EV{0}".format(n)].chargerate + (pv_energy_available * evbatt["EV{0}".format(n)].rel_weigh / total_weigh)
@@ -57,37 +78,16 @@ def ChargeRateBalance(evbatt):
             else: 
                 evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].chargerate,0,settings.fastcharge_ulim)
             
-            
-        pv_energy_available = settings.pv_energy_profile[settings.hour]
-        
+#        pv_energy_available = settings.pv_energy_profile[settings.hour]
+        total_chargerate = 0
         for n in range(1,settings.carnumber+1):
-            pv_energy_available = pv_energy_available - evbatt["EV{0}".format(n)].chargerate
-                     
-    # =========================================================================
-    # Charging and plotting results
-    # =========================================================================
-    for n in range(1,settings.carnumber+1):
-        print('EV',n, 'SOC before charging: ',evbatt["EV{0}".format(n)].SOC)
-        
-        total_chargerate += evbatt["EV{0}".format(n)].chargerate
-               
-        evbatt["EV{0}".format(n)].charge(evbatt["EV{0}".format(n)].chargerate,settings.t_inc)
+            total_chargerate += evbatt["EV{0}".format(n)].chargerate
+            # pv_energy_available = pv_energy_available - evbatt["EV{0}".format(n)].chargerate
+            
+        pv_energy_available = settings.pv_energy_profile[settings.hour] - total_chargerate
+        # For debugging
+        if pv_energy_available < -0.01:  # Ideally zero, but it sometimes goes negative due to rounding errors
+            print('PLease run the simulation again. BUG')
+            sys.exit()
        
-        print('EV',n, 'Chargerate: ', evbatt["EV{0}".format(n)].chargerate)
-        print('EV',n, 'SOC after charging: ',evbatt["EV{0}".format(n)].SOC)
-        print('')
-               
-        # For plotting
-        SOC_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
-        
-    print('Leftover energy: ', np.clip(pv_energy_available, 0, None), ' kW')
-    
-    # Plotting a graph of the SOC
-    y_axis = np.arange(len(SOC_plot)) 
-    plt.barh(y_axis, SOC_plot)
-    plt.title('State of charge of the EVs')
-    plt.xlabel('State of charge [%]')
-    plt.show()
-      
-    
-    return evbatt, total_chargerate
+    return evbatt, pv_energy_available, pv_leftover_energy
