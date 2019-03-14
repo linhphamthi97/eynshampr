@@ -17,10 +17,11 @@ import datetime
 # Variables to change
 carnumber = 100
 
-current_datetime = datetime.datetime(2020,1,10,7,0)     # Selected date for simulation, start time of simulation
-current_date = current_datetime.date
-current_time = current_datetime.time
-endtime = datetime.datetime(current_datetime.year,current_datetime.month,current_datetime.day,22,0)     # End time of simulation
+current_datetime = datetime.datetime(2020,6,10,5,0,0)     # Selected date for simulation, start time of simulation
+starttime = current_datetime                             # Start time of simulation, set at the beginning of the simulation
+current_date = datetime.date(current_datetime.year, current_datetime.month, current_datetime.day)
+current_time = datetime.time(current_datetime.hour, current_datetime.minute, 0)
+endtime = datetime.datetime(current_datetime.year,current_datetime.month,current_datetime.day,23,0)     # End time of simulation
 month = current_datetime.month
 hour = current_datetime.hour
 t_inc = 0.05                 # Time increment for the simulation in hours

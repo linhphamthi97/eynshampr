@@ -8,6 +8,7 @@ This file contains the function to balance the charging rates among the charging
 """
 import settings
 import numpy as np
+import sys
 
 def ChargeRateBalance(evbatt,pv_leftover_energy):
     # =========================================================================
@@ -77,13 +78,16 @@ def ChargeRateBalance(evbatt,pv_leftover_energy):
             else: 
                 evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].chargerate,0,settings.fastcharge_ulim)
             
-               
-        pv_energy_available = settings.pv_energy_profile[settings.hour]
-        
-
+#        pv_energy_available = settings.pv_energy_profile[settings.hour]
+        total_chargerate = 0
         for n in range(1,settings.carnumber+1):
-            pv_energy_available = pv_energy_available - evbatt["EV{0}".format(n)].chargerate
-            if pv_energy_available < 0:
-                print('PLease run the simulation again. BUG')
+            total_chargerate += evbatt["EV{0}".format(n)].chargerate
+            # pv_energy_available = pv_energy_available - evbatt["EV{0}".format(n)].chargerate
+            
+        pv_energy_available = settings.pv_energy_profile[settings.hour] - total_chargerate
+        # For debugging
+        if pv_energy_available < -0.01:  # Ideally zero, but it sometimes goes negative due to rounding errors
+            print('PLease run the simulation again. BUG')
+            sys.exit()
        
     return evbatt, pv_energy_available, pv_leftover_energy
