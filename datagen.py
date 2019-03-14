@@ -22,7 +22,15 @@ def datagen():
                                 
     # Iterating to generate the EV battery attributes
     for n in range(1,(settings.carnumber+1)):
-            evbatt["EV{0}".format(n)]=EVbattery(32,random.uniform(0,1),random.gauss(7,2),random.randint(0,1),\
+                                                # Battery capacity        
+            evbatt["EV{0}".format(n)]=EVbattery(32,\
+                                                # State of charge
+                                                random.uniform(0,1),\
+                                                # Length of stay in hours
+                                                random.gauss(7,2),\
+                                                # Type of charging, 0 for slow, 1 for fast
+                                                random.randint(0,1),\
+                                                # Time of arrival, year, month, day set in settings, hour and minute randomized
                                                 datetime.datetime(settings.current_datetime.year,settings.current_datetime.month,\
                                                                   settings.current_datetime.day,random.randint(6,20),random.randint(0,59)))
             total_ev_demand = total_ev_demand + evbatt["EV{0}".format(n)].fill

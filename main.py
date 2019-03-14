@@ -24,6 +24,8 @@ pv_leftover_energy = 0
 # Generate data
 # =============================================================================
 evbatt, total_ev_demand, total_inst_chargerate = datagen()
+for n in range(1,settings.carnumber+1):
+    evbatt["EV{0}".format(n)].presentUpdate(settings.current_datetime)
 
 # For showing results
 SOC_before_plot=list()
@@ -54,6 +56,9 @@ while settings.current_datetime < settings.endtime:
     
     # Incrementing time
     settings.current_datetime = settings.current_datetime + datetime.timedelta(hours=settings.t_inc)
+    
+    for n in range(1,settings.carnumber+1):    
+        evbatt["EV{0}".format(n)].presentUpdate(settings.current_datetime)
     
 # =============================================================================
 # Plotting and showing results

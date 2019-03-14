@@ -16,6 +16,7 @@ import datetime
 # =============================================================================
 # Variables to change
 carnumber = 100
+
 current_datetime = datetime.datetime(2020,1,10,7,0)     # Selected date for simulation, start time of simulation
 current_date = current_datetime.date
 current_time = current_datetime.time
@@ -26,8 +27,8 @@ t_inc = 0.05                 # Time increment for the simulation in hours
            
 el_price = 0.13             # Price of electricity, in pounds per kWh
 
-slowcharge_ulim = 3         # kW charging
-fastcharge_ulim = 7         # kW charging
+slowcharge_ulim = 3         # kW charging upper limit
+fastcharge_ulim = 7         # kW charging upper limit
 
 #Variables calculated
 pv_energy_profile = np.loadtxt('total_' + str(month) + '_kWh.txt')

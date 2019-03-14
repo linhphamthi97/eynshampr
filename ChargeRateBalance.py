@@ -8,7 +8,6 @@ This file contains the function to balance the charging rates among the charging
 """
 import settings
 import numpy as np
-import datetime
 
 def ChargeRateBalance(evbatt,pv_leftover_energy):
     # =========================================================================
@@ -22,6 +21,7 @@ def ChargeRateBalance(evbatt,pv_leftover_energy):
     # =========================================================================
     # Determining chargegrates
     # =========================================================================
+
     # Reset chargerate to zero if SOC is 1
     for n in range(1,settings.carnumber+1):
         if evbatt["EV{0}".format(n)].SOC >= 1:
@@ -43,20 +43,14 @@ def ChargeRateBalance(evbatt,pv_leftover_energy):
                 evbatt["EV{0}".format(n)].rel_weigh = evbatt["EV{0}".format(n)].fill / evbatt["EV{0}".format(n)].time
             
 
-            # No charging before the car has arrived and after it has left
-            if evbatt["EV{0}".format(n)].arrivaltime > settings.current_datetime: 
-                evbatt["EV{0}".format(n)].rel_weigh = 0
-                evbatt["EV{0}".format(n)].chargerate = 0 
-            if evbatt["EV{0}".format(n)].arrivaltime + datetime.timedelta(hours = evbatt["EV{0}".format(n)].time) < settings.current_datetime: 
-                evbatt["EV{0}".format(n)].rel_weigh = 0
-                evbatt["EV{0}".format(n)].chargerate = 0
-                
-            # Reset chargerate to zero if SOC is 1
-            if evbatt["EV{0}".format(n)].SOC >= 1:
+            # Set chargerate to zero if SOC is 1 or if car is not present at the site
+            if evbatt["EV{0}".format(n)].SOC >= 1 or evbatt["EV{0}".format(n)].present == 0:
                 evbatt["EV{0}".format(n)].chargerate = 0
                 evbatt["EV{0}".format(n)].rel_weigh = 0
-            
+
             total_weigh = total_weigh + evbatt["EV{0}".format(n)].rel_weigh
+            
+            
         # =====================================================================
         # Break out of the while loop if all of the charging ports can't be charging or is at their limit
         # =====================================================================         
