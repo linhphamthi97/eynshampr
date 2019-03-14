@@ -59,7 +59,7 @@ while settings.current_datetime < settings.endtime:
 # Plotting and showing results
 # =============================================================================
 """ Energy balances """
-print('Leftover energy: ', np.clip(pv_leftover_energy, 0, None), ' kW')
+print('Leftover energy: ', np.clip(pv_leftover_energy, 0, None), ' kWh')
 print('Total energy bought from the grid: ', grid_energy_needed * settings.t_inc, ' kWh')
 print('Cost of energy bought from the grid: ', grid_energy_needed * settings.t_inc * settings.el_price, ' GBP')
 
@@ -78,7 +78,7 @@ for n in range(1,settings.carnumber+1):
 y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
 plt.rcParams["figure.figsize"] = [8,6]
 plt.barh(y_axis, SOC_before_plot)
-plt.ylim(ymin=0)
+plt.ylim(bottom=0)
 plt.title('State of charge of the EVs before charging')
 plt.xlabel('State of charge [%]')
 plt.show()
@@ -87,9 +87,7 @@ plt.show()
 y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
 plt.rcParams["figure.figsize"] = [8,6]
 plt.barh(y_axis, SOC_after_plot)
-plt.ylim(ymin=0)
+plt.ylim(bottom=0)
 plt.title('State of charge of the EVs after charging')
 plt.xlabel('State of charge [%]')
 plt.show()
-    
-print('Done')

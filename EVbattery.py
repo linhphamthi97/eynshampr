@@ -20,6 +20,6 @@ class EVbattery:
 
     def charge(self,chargerate,t_inc,current_time):
         self.fill = self.fill - self.chargerate*t_inc
-#        self.SOC = (self.capacity - self.fill)/self.capacity   # This line is for debugging
+        self.SOC = (self.capacity - self.fill)/self.capacity   # This line is for debugging
         self.SOC = np.clip((self.capacity - self.fill)/self.capacity,0,1) # This is the real expression to use for final program
-        self.avg_chargerate = np.clip(self.fill / ((self.arrivaltime + datetime.timedelta(hours = self.time) - current_time).total_seconds()/3600) , 0 , None)
+#        self.avg_chargerate = np.clip(self.fill / ((self.arrivaltime + datetime.timedelta(hours = self.time) - current_time).total_seconds()/3600) , 0 , None)

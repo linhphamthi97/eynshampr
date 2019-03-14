@@ -9,22 +9,32 @@ predicted PV output for the rest of the day.
 """
 import settings
 import numpy as np
+import datetime
 
 
 def gridEnergyCalculator(evbatt, grid_energy_needed):
     for n in range(1,settings.carnumber+1):
         
         # Picking out the EVs that after the energy division are charging at a sub-optimal rate
-       
+      
+        # Slow charge
         if evbatt["EV{0}".format(n)].chargetype == 0 and \
            (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim)) and \
-           (evbatt["EV{0}".format(n)].SOC < 1):       #Slow charge
-            grid_energy_needed += np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
-            evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim)
+           (evbatt["EV{0}".format(n)].SOC < 1) and \
+           evbatt["EV{0}".format(n)].arrivaltime < settings.current_datetime and \
+           evbatt["EV{0}".format(n)].arrivaltime + datetime.timedelta(hours = evbatt["EV{0}".format(n)].time) > settings.current_datetime:
+
+               grid_energy_needed += np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
+               evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim)
+
+        # Fast charge
         elif evbatt["EV{0}".format(n)].chargetype == 1 and \
              (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim)) and \
-             (evbatt["EV{0}".format(n)].SOC < 1):       #Fast charge: 
-            grid_energy_needed += np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
-            evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim)
+             (evbatt["EV{0}".format(n)].SOC < 1) and \
+             evbatt["EV{0}".format(n)].arrivaltime < settings.current_datetime and \
+             evbatt["EV{0}".format(n)].arrivaltime + datetime.timedelta(hours = evbatt["EV{0}".format(n)].time) > settings.current_datetime:
+
+                 grid_energy_needed += np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
+                 evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim)
                 
     return evbatt, grid_energy_needed
