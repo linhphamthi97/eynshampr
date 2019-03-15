@@ -31,7 +31,13 @@ def datagen():
             else:
                 ctype = 1 #fast charging takes 4 hours to charge from flat to full
             
-            evbatt["EV{0}".format(n)]=EVbattery(capacity,SOC,time,ctype)
+            n = 1 # extract one random sample from normal mixture distribution to give arrival time
+            mu = [9, 17] # means
+            sigma = [0.1,2.1] # standard deviations
+            Z = np.random.choice([0,1]) # latent variable
+            arrivaltime = float(np.random.normal(mu[Z], sigma[Z], 1))
+                        
+            evbatt["EV{0}".format(n)]=EVbattery(capacity,SOC,time,ctype,arrivaltime)
             total_ev_demand = total_ev_demand + evbatt["EV{0}".format(n)].fill
             total_inst_chargerate = total_inst_chargerate + evbatt["EV{0}".format(n)].avg_chargerate
             
