@@ -78,15 +78,18 @@ def ChargeRateBalance(evbatt,pv_leftover_energy):
             else: 
                 evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].chargerate,0,settings.fastcharge_ulim)
             
-#        pv_energy_available = settings.pv_energy_profile[settings.hour]
+
+        # =====================================================================
+        # Calculating leftover energy after the clip
+        # =====================================================================  
         total_chargerate = 0
         for n in range(1,settings.carnumber+1):
             total_chargerate += evbatt["EV{0}".format(n)].chargerate
-            # pv_energy_available = pv_energy_available - evbatt["EV{0}".format(n)].chargerate
             
         pv_energy_available = settings.pv_energy_profile[settings.hour] - total_chargerate
+
         # For debugging
-        if pv_energy_available < -0.01:  # Ideally zero, but it sometimes goes negative due to rounding errors
+        if pv_energy_available < -0.01:  # Ideally zero, but it sometimes goes negative by a very small amount (order of e-15) due to rounding errors
             print('PLease run the simulation again. BUG')
             sys.exit()
        

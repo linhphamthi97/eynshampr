@@ -30,17 +30,24 @@ def gridEnergyCalculator(evbatt, total_grid_energy_needed, red_band_energy, ambe
            (evbatt["EV{0}".format(n)].SOC < 1) and \
            evbatt["EV{0}".format(n)].present == 1:
 
-               extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
-               evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim)
-
+               if evbatt["EV{0}".format(n)].need_maxcharge == 1:
+                   extra_energy_needed = settings.slowcharge_ulim - evbatt["EV{0}".format(n)].chargerate
+                   evbatt["EV{0}".format(n)].chargerate = settings.slowcharge_ulim                   
+               else:
+                   extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
+                   evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim)
         # Fast charge
         elif evbatt["EV{0}".format(n)].chargetype == 1 and \
              (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim)) and \
              (evbatt["EV{0}".format(n)].SOC < 1) and \
              evbatt["EV{0}".format(n)].present == 1:
 
-                 extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
-                 evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim)
+               if evbatt["EV{0}".format(n)].need_maxcharge == 1:
+                   extra_energy_needed = settings.fastcharge_ulim - evbatt["EV{0}".format(n)].chargerate
+                   evbatt["EV{0}".format(n)].chargerate = settings.fastcharge_ulim                   
+               else:
+                   extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
+                   evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim)
                  
         #======================================================================
         # Categorizing the energy used into the time bands for finance applications

@@ -4,7 +4,7 @@ Created on Sun Feb 10 22:55:45 2019
 
 @author: Linh Pham Thi
 
-This is a file to generate the random EV states
+This is a file to generate the random instances for the EVbattery class
 """
 import settings
 from EVbattery import EVbattery
