@@ -22,7 +22,7 @@ end_SOC_req = 0.8           # The achievable SOC at leaving below which car is g
 
 
 """ Simulation related """
-current_datetime = datetime.datetime(2020,11,10,6,0,0)     # Selected date for simulation, start time of simulation
+current_datetime = datetime.datetime(2020,1,10,6,0,0)     # Selected date for simulation, start time of simulation
 endtime = datetime.datetime(current_datetime.year,current_datetime.month,current_datetime.day,23,0)     # End time of simulation
 t_inc = 0.05                 # Time increment for the simulation in hours
            

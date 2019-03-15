@@ -10,6 +10,7 @@ import settings
 from EVbattery import EVbattery
 import random
 import datetime
+import numpy as np
 
 def datagen():
     # Initializing variables
@@ -32,7 +33,8 @@ def datagen():
                                                 random.randint(0,1),\
                                                 # Time of arrival, year, month, day set in settings, hour and minute randomized
                                                 datetime.datetime(settings.current_datetime.year,settings.current_datetime.month,\
-                                                                  settings.current_datetime.day,random.randint(6,20),random.randint(0,59)))
+#                                                                  settings.current_datetime.day,random.randint(6,20),random.randint(0,59)))
+                                                                   settings.current_datetime.day,int(np.clip(random.gauss(8,3),6,23)), random.randint(0,59)))
             total_ev_demand = total_ev_demand + evbatt["EV{0}".format(n)].fill
             total_inst_chargerate = total_inst_chargerate + evbatt["EV{0}".format(n)].avg_chargerate
             

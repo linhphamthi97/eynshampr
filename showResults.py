@@ -31,6 +31,11 @@ def showResults(evbatt):
     # =========================================================================
     # Print energy balance values
     # =========================================================================
+    total_daily_pv_energy = 0
+    for n in range (1,25):
+        total_daily_pv_energy += settings.pv_energy_profile[n]
+    print('Total daily PV energy: ' , total_daily_pv_energy)
+
     print('Leftover energy: ', np.clip(pv_leftover_energy, 0, None), ' kWh')
     print('')
     print('Total energy bought from the grid: ', grid_energy_needed, ' kWh')
