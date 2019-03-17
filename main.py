@@ -8,65 +8,58 @@ author: Linh Pham Thi
 # =============================================================================
 # Importing neccessary Python libraries and modules, initializing variables
 # =============================================================================
-import settings
-import datetime  
+import settings 
 import showResults as sr
 
-from ChargeRateBalance import ChargeRateBalance
+from simulation import simulation
+from chargeRateBalance import chargeRateBalance
 from datagen import datagen
 from gridEnergyCalculator import gridEnergyCalculator
 
 
 # =============================================================================
-# Generate data
+# Set up simulation and generate data
 # =============================================================================
-evbatt, total_ev_demand, total_inst_chargerate = datagen()
+simulation = simulation(settings.starttime, settings.endtime, settings.time_increment)
 
-for n in range(1,settings.carnumber+1):
-    evbatt["EV{0}".format(n)].presentUpdate(settings.current_datetime)
+evbatt, total_ev_demand, total_inst_chargerate = datagen(simulation)
+
+for n in range (1, settings.carnumber + 1):
     evbatt["EV{0}".format(n)].detNeedMaxCR()
+    evbatt["EV{0}".format(n)].statusUpdate(simulation)
 
     # For plotting
-for n in range(1,settings.carnumber+1):
     sr.SOC_before_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
     
 # =============================================================================
 # Simulation
 # =============================================================================
-while settings.current_datetime < settings.endtime:
+
+while simulation.current_datetime < simulation.endtime:
         # For plotting
-    sr.x_axis.append(settings.current_datetime)
+    sr.x_axis.append(simulation.current_datetime)
     
     # =========================================================================
     # Calculating distribution and buy from grid
     # =========================================================================
-    evbatt, sr.pv_energy_available, sr.pv_leftover_energy = ChargeRateBalance(evbatt, sr.pv_leftover_energy)
-    evbatt, sr.grid_energy_needed, sr.total_extra_energy_needed, sr.red_band_energy, sr.amber_band_energy, sr.green_band_energy \
-        = gridEnergyCalculator(evbatt, sr.grid_energy_needed, sr.red_band_energy, sr.amber_band_energy, sr.green_band_energy)
-        
-        # For plotting
-    sr.grid_energy.append(sr.total_extra_energy_needed)
-    sr.unused_pv_energy.append(sr.pv_energy_available)
+    evbatt = chargeRateBalance(evbatt, simulation)
+    evbatt = gridEnergyCalculator(evbatt, simulation)
     
     # =========================================================================
     # Charging
     # =========================================================================
-    for n in range(1,settings.carnumber+1):
-        evbatt["EV{0}".format(n)].charge(evbatt["EV{0}".format(n)].chargerate,settings.t_inc,settings.current_datetime)
+    for n in range (1, settings.carnumber + 1):
+        evbatt["EV{0}".format(n)].charge(simulation)
     
     # =========================================================================
     # Incrementing time
     # =========================================================================
-    settings.current_datetime = settings.current_datetime + datetime.timedelta(hours=settings.t_inc)
-    settings.current_date = datetime.date(settings.current_datetime.year, settings.current_datetime.month, settings.current_datetime.day)
-    settings.current_time = datetime.time(settings.current_datetime.hour, settings.current_datetime.minute)
-    settings.hour = settings.current_datetime.hour
+    simulation.timeUpdate()
     
-    for n in range(1,settings.carnumber+1):    
-        evbatt["EV{0}".format(n)].presentUpdate(settings.current_datetime)
-    
+    for n in range (1, settings.carnumber + 1):    
+        evbatt["EV{0}".format(n)].statusUpdate(simulation)
 
 # =============================================================================
 # Show results of the simulation
 # =============================================================================
-sr.showResults(evbatt)
+sr.showResults(evbatt, simulation)

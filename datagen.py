@@ -11,8 +11,9 @@ from EVbattery import EVbattery
 import random
 import datetime
 import numpy as np
+import simulation
 
-def datagen():
+def datagen(simulation):
     # Initializing variables
     evbatt = {}
     total_ev_demand = 0         # Total number of kWh of the batteries that need to 
@@ -26,15 +27,15 @@ def datagen():
                                                 # Battery capacity        
             evbatt["EV{0}".format(n)]=EVbattery(32,\
                                                 # State of charge
-                                                random.uniform(0,1),\
+                                                np.clip(random.gauss(0.5,0.15), 0, None),\
                                                 # Length of stay in hours
                                                 random.gauss(7,2),\
                                                 # Type of charging, 0 for slow, 1 for fast
                                                 random.randint(0,1),\
                                                 # Time of arrival, year, month, day set in settings, hour and minute randomized
-                                                datetime.datetime(settings.current_datetime.year,settings.current_datetime.month,\
+                                                datetime.datetime(simulation.current_datetime.year,simulation.current_datetime.month,\
 #                                                                  settings.current_datetime.day,random.randint(6,20),random.randint(0,59)))
-                                                                   settings.current_datetime.day,int(np.clip(random.gauss(8,3),6,23)), random.randint(0,59)))
+                                                                  simulation.current_datetime.day,int(np.clip(random.gauss(8,3),6,23)), random.randint(0,59)))
             total_ev_demand = total_ev_demand + evbatt["EV{0}".format(n)].fill
             total_inst_chargerate = total_inst_chargerate + evbatt["EV{0}".format(n)].avg_chargerate
             

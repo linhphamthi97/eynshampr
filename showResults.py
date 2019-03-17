@@ -26,24 +26,33 @@ x_axis = list()     # An x axis containing the timestamps of the simulation
 grid_energy = list()
 unused_pv_energy = list()
 
-def showResults(evbatt):
+def showResults(evbatt, simulation):
     
     # =========================================================================
     # Print energy balance values
     # =========================================================================
+    # PV energy
+    pv_energy_profile = np.loadtxt('total_' + str(simulation.current_datetime.month) + '_kWh.txt')
     total_daily_pv_energy = 0
     for n in range (1,25):
-        total_daily_pv_energy += settings.pv_energy_profile[n]
-    print('Total daily PV energy: ' , total_daily_pv_energy)
+        total_daily_pv_energy += pv_energy_profile[n]
+    print('Total daily PV energy: ' , np.around(total_daily_pv_energy, decimals = 1))
 
-    print('Leftover energy: ', np.clip(pv_leftover_energy, 0, None), ' kWh')
+    print('Leftover energy from PV: ', np.around(np.clip(pv_leftover_energy, 0, None), decimals = 1), 'kWh')
+    
+    # Grid energy
     print('')
-    print('Total energy bought from the grid: ', grid_energy_needed, ' kWh')
-    print('Red band energy bought from the grid: ', red_band_energy, ' kWh')
-    print('Amber band energy bought from the grid: ', amber_band_energy, ' kWh')
-    print('Green band energy bought from the grid: ', green_band_energy, ' kWh')
+    print('Total energy bought from the grid: ', np.around(grid_energy_needed, decimals = 1), ' kWh')
+    print('Red band energy bought from the grid: ', np.around(red_band_energy, decimals = 1), ' kWh')
+    print('Amber band energy bought from the grid: ', np.around(amber_band_energy, decimals = 1), ' kWh')
+    print('Green band energy bought from the grid: ', np.around(green_band_energy, decimals = 1), ' kWh')
     print('')
-    print('Cost of energy bought from the grid: ', grid_energy_needed * settings.el_price, ' GBP')
+    
+    # Cost of energy
+    energy_cost = red_band_energy * settings.red_energy_cost \
+                    + amber_band_energy * settings.amber_energy_cost \
+                    + green_band_energy * settings.green_energy_cost
+    print('Cost of energy bought from the grid: ', np.around(energy_cost, decimals = 1), ' GBP')
     
     
     # =========================================================================

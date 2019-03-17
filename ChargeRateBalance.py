@@ -9,14 +9,17 @@ This file contains the function to balance the charging rates among the charging
 import settings
 import numpy as np
 import sys
+import showResults as sr
 
-def ChargeRateBalance(evbatt,pv_leftover_energy):
+def chargeRateBalance (evbatt, simulation):
     # =========================================================================
     # Initialising variables
     # =========================================================================
-    pv_energy_available = settings.pv_energy_profile[settings.hour]
+    pv_energy_profile = np.loadtxt('total_' + str(simulation.current_datetime.month) + '_kWh.txt')
     
-    for n in range(1,settings.carnumber+1):
+    pv_energy_available = pv_energy_profile[simulation.current_hour]
+    
+    for n in range (1, settings.carnumber + 1):
         evbatt["EV{0}".format(n)].chargerate = 0
 
     # =========================================================================
@@ -24,7 +27,7 @@ def ChargeRateBalance(evbatt,pv_leftover_energy):
     # =========================================================================
 
     # Reset chargerate to zero if SOC is 1
-    for n in range(1,settings.carnumber+1):
+    for n in range (1, settings.carnumber + 1):
         if evbatt["EV{0}".format(n)].SOC >= 1:
             evbatt["EV{0}".format(n)].chargerate = 0
             evbatt["EV{0}".format(n)].rel_weigh = 0
@@ -34,7 +37,7 @@ def ChargeRateBalance(evbatt,pv_leftover_energy):
         # =====================================================================
         # Terms for the weighted average
         # =====================================================================     
-        for n in range(1,settings.carnumber+1):
+        for n in range (1, settings.carnumber + 1):
             
             # If the charging port is already at its limit, give no weight, otherwise use parameters to determine weighting
             if (evbatt["EV{0}".format(n)].chargetype == 0 and evbatt["EV{0}".format(n)].chargerate == settings.slowcharge_ulim) \
@@ -57,10 +60,10 @@ def ChargeRateBalance(evbatt,pv_leftover_energy):
         # =====================================================================         
         if total_weigh == 0 :
             # Integrate leftover PV energy during the day by using trapezoidal rule
-            pv_leftover_energy += pv_energy_available * settings.t_inc 
+            sr.pv_leftover_energy += pv_energy_available * simulation.t_inc 
 
-            pv_energy_available = settings.pv_energy_profile[settings.hour]
-            for n in range(1,settings.carnumber+1):
+            pv_energy_available = pv_energy_profile[simulation.current_hour]
+            for n in range (1, settings.carnumber + 1):
                 pv_energy_available = pv_energy_available - evbatt["EV{0}".format(n)].chargerate            
             
             break
@@ -68,7 +71,7 @@ def ChargeRateBalance(evbatt,pv_leftover_energy):
         # =====================================================================
         # Calculating charging rates
         # =====================================================================  
-        for n in range(1,settings.carnumber+1):
+        for n in range (1, settings.carnumber + 1):
             # Calculating the chargerate with the weighted division on energy available
             evbatt["EV{0}".format(n)].chargerate = evbatt["EV{0}".format(n)].chargerate + (pv_energy_available * evbatt["EV{0}".format(n)].rel_weigh / total_weigh)
             
@@ -83,14 +86,17 @@ def ChargeRateBalance(evbatt,pv_leftover_energy):
         # Calculating leftover energy after the clip
         # =====================================================================  
         total_chargerate = 0
-        for n in range(1,settings.carnumber+1):
+        for n in range (1, settings.carnumber + 1):
             total_chargerate += evbatt["EV{0}".format(n)].chargerate
-            
-        pv_energy_available = settings.pv_energy_profile[settings.hour] - total_chargerate
-
+        
+        pv_energy_available = pv_energy_profile[simulation.current_hour] - total_chargerate
+        
         # For debugging
         if pv_energy_available < -0.01:  # Ideally zero, but it sometimes goes negative by a very small amount (order of e-15) due to rounding errors
             print('PLease run the simulation again. BUG')
             sys.exit()
+ 
+    # For plotting unused PV energy
+    sr.unused_pv_energy.append(pv_energy_available)
        
-    return evbatt, pv_energy_available, pv_leftover_energy
+    return evbatt

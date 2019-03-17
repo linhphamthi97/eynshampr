@@ -7,8 +7,7 @@ Created on Sun Feb 10 22:46:08 2019
 This file contains all the global variables and all variables that need to be
 initialized or tuned for the simulation
 """
-import numpy as np
-import datetime 
+import datetime
 
 # =============================================================================
 # Variables to change
@@ -22,30 +21,13 @@ end_SOC_req = 0.8           # The achievable SOC at leaving below which car is g
 
 
 """ Simulation related """
-current_datetime = datetime.datetime(2020,1,10,6,0,0)     # Selected date for simulation, start time of simulation
-endtime = datetime.datetime(current_datetime.year,current_datetime.month,current_datetime.day,23,0)     # End time of simulation
-t_inc = 0.05                 # Time increment for the simulation in hours
+starttime = datetime.datetime(2020,1,10,6,0,0)     # Selected date for simulation, start time of simulation
+endtime = datetime.datetime(starttime.year,starttime.month,starttime.day,23,0)     # End time of simulation
+time_increment = 0.05                 # [hours]
            
 
 """ Finance related """
-el_price = 0.13             # Price of electricity, in pounds per kWh
-
-
-# =============================================================================
-# Calculated variables
-# =============================================================================
-""" Simulation related """
-# Start time of simulation, stored for visualization purposes
-starttime = current_datetime    
-
-# Copy times by value to avoid copy by reference
-current_date = datetime.date(current_datetime.year, current_datetime.month, current_datetime.day)
-current_time = datetime.time(current_datetime.hour, current_datetime.minute, 0)
-
-month = current_datetime.month
-hour = current_datetime.hour
-
-""" Car and charging related """
-pv_energy_profile = np.loadtxt('total_' + str(month) + '_kWh.txt')
-
-""" Finance related """
+# Price of electricity, GPB per kWh
+red_energy_cost = (14 + 11.596)/100         # Base rate + DUOS charge           
+amber_energy_cost = (14 + 0.854)/100
+green_energy_cost = (14 + 0.4966)/100

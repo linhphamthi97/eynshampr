@@ -10,12 +10,13 @@ predicted PV output for the rest of the day.
 import settings
 import numpy as np
 import datetime
+import showResults as sr
 
 
-def gridEnergyCalculator(evbatt, total_grid_energy_needed, red_band_energy, amber_band_energy, green_band_energy):
+def gridEnergyCalculator(evbatt, simulation):
     total_extra_energy_needed = 0
     
-    for n in range(1,settings.carnumber+1):
+    for n in range (1, settings.carnumber + 1):
         
         #======================================================================
         # Picking out the EVs that after the energy division are charging at a 
@@ -53,25 +54,29 @@ def gridEnergyCalculator(evbatt, total_grid_energy_needed, red_band_energy, ambe
         # Categorizing the energy used into the time bands for finance applications
         #======================================================================
         # Summing up total energy bought from the grid
-        total_grid_energy_needed += extra_energy_needed * settings.t_inc    # Goes towards total energy bought during the day
-        total_extra_energy_needed += extra_energy_needed * settings.t_inc   # Goes towards total energy bought during that time instant, mainly for visualising
+        sr.grid_energy_needed += extra_energy_needed * simulation.t_inc    # Goes towards total energy bought during the day
+        total_extra_energy_needed += extra_energy_needed * simulation.t_inc   # Goes towards total energy bought during that time instant, mainly for visualising
         
         # Weekday
-        if settings.current_date.weekday() < 5:
-            if settings.current_time >= datetime.time(16,0) and settings.current_time < datetime.time(19,0):
-                red_band_energy += extra_energy_needed * settings.t_inc
-            elif (settings.current_time >= datetime.time(7,0) and settings.current_time < datetime.time(16,0)) \
+        if simulation.current_date.weekday() < 5:
+            if simulation.current_time >= datetime.time(16,0) and simulation.current_time < datetime.time(19,0):
+                sr.red_band_energy += extra_energy_needed * simulation.t_inc
+            elif (simulation.current_time >= datetime.time(7,0) and simulation.current_time < datetime.time(16,0)) \
                  or\
-                 (settings.current_time >= datetime.time(19,0) and settings.current_time < datetime.time(23,0)):
-                     amber_band_energy += extra_energy_needed * settings.t_inc
-            elif (settings.current_time >= datetime.time(0,0) and settings.current_time < datetime.time(7,0)) \
+                 (simulation.current_time >= datetime.time(19,0) and simulation.current_time < datetime.time(23,0)):
+                     sr.amber_band_energy += extra_energy_needed * simulation.t_inc
+            elif (simulation.current_time >= datetime.time(0,0) and simulation.current_time < datetime.time(7,0)) \
                  or\
-                 settings.current_time >= datetime.time(23,0):
-                     green_band_energy += extra_energy_needed * settings.t_inc
+                 simulation.current_time >= datetime.time(23,0):
+                     sr.green_band_energy += extra_energy_needed * simulation.t_inc
         
         # Weekend
         else: 
-            green_band_energy += extra_energy_needed * settings.t_inc
+            sr.green_band_energy += extra_energy_needed * settings.t_inc
     
-                
-    return evbatt, total_grid_energy_needed, total_extra_energy_needed, red_band_energy, amber_band_energy, green_band_energy
+    #==========================================================================
+    # For plotting
+    #==========================================================================
+    sr.grid_energy.append(total_extra_energy_needed)
+                     
+    return evbatt
