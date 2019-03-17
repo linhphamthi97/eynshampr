@@ -21,13 +21,13 @@ end_SOC_req = 0.8           # The achievable SOC at leaving below which car is g
 
 
 """ Simulation related """
-starttime = datetime.datetime(2020,1,10,6,0,0)     # Selected date for simulation, start time of simulation
+starttime = datetime.datetime(2020,12,10,6,0,0)     # Selected date for simulation, start time of simulation
 endtime = datetime.datetime(starttime.year,starttime.month,starttime.day,23,0)     # End time of simulation
 time_increment = 0.05                 # [hours]
            
 
 """ Finance related """
 # Price of electricity, GPB per kWh
-red_energy_cost = (14 + 11.596)/100         # Base rate + DUOS charge           
-amber_energy_cost = (14 + 0.854)/100
-green_energy_cost = (14 + 0.4966)/100
+red_energy_cost = (14 + 5.363)/100         # Base rate + DUOS charge           
+amber_energy_cost = (14 + 0.57)/100
+green_energy_cost = (14 + 0.452)/100

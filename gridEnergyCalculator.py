@@ -21,15 +21,22 @@ def gridEnergyCalculator(evbatt, simulation):
         #======================================================================
         # Picking out the EVs that after the energy division are charging at a 
         # sub-optimal rate (less than the average charging rate) and buying in
-        # energy from the grid to match that average charging rate
+        # energy from the grid to match that average charging rate.
+        #
+        # Conditions to buy from the grid:
+        #   - charging rate less than it's charging limit
+        #   - SOC less than 0.8, i.e our goal for the leaving SOC
+        #   - the EV is present at the site
+        #   - permission to buy from the grid
         #======================================================================      
         extra_energy_needed = 0
         
         # Slow charge
         if evbatt["EV{0}".format(n)].chargetype == 0 and \
            (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim)) and \
-           (evbatt["EV{0}".format(n)].SOC < 1) and \
-           evbatt["EV{0}".format(n)].present == 1:
+           (evbatt["EV{0}".format(n)].SOC < settings.end_SOC_req) and \
+           evbatt["EV{0}".format(n)].present == 1 and \
+           evbatt["EV{0}".format(n)].grid_perm == 1:
 
                if evbatt["EV{0}".format(n)].need_maxcharge == 1:
                    extra_energy_needed = settings.slowcharge_ulim - evbatt["EV{0}".format(n)].chargerate
@@ -40,8 +47,9 @@ def gridEnergyCalculator(evbatt, simulation):
         # Fast charge
         elif evbatt["EV{0}".format(n)].chargetype == 1 and \
              (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim)) and \
-             (evbatt["EV{0}".format(n)].SOC < 1) and \
-             evbatt["EV{0}".format(n)].present == 1:
+             (evbatt["EV{0}".format(n)].SOC < settings.end_SOC_req) and \
+             evbatt["EV{0}".format(n)].present == 1 and \
+             evbatt["EV{0}".format(n)].grid_perm == 1:
 
                if evbatt["EV{0}".format(n)].need_maxcharge == 1:
                    extra_energy_needed = settings.fastcharge_ulim - evbatt["EV{0}".format(n)].chargerate
@@ -72,7 +80,7 @@ def gridEnergyCalculator(evbatt, simulation):
         
         # Weekend
         else: 
-            sr.green_band_energy += extra_energy_needed * settings.t_inc
+            sr.green_band_energy += extra_energy_needed * simulation.t_inc
     
     #==========================================================================
     # For plotting

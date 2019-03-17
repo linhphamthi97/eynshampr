@@ -36,7 +36,7 @@ def showResults(evbatt, simulation):
     total_daily_pv_energy = 0
     for n in range (1,25):
         total_daily_pv_energy += pv_energy_profile[n]
-    print('Total daily PV energy: ' , np.around(total_daily_pv_energy, decimals = 1))
+    print('Total daily PV energy: ' , np.around(total_daily_pv_energy, decimals = 1), ' kWh')
 
     print('Leftover energy from PV: ', np.around(np.clip(pv_leftover_energy, 0, None), decimals = 1), 'kWh')
     

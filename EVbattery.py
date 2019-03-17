@@ -7,7 +7,6 @@ Created on Sun Feb 10 14:46:35 2019
 import numpy as np
 import datetime
 import settings
-import simulation
 
 class EVbattery:
     
@@ -27,11 +26,13 @@ class EVbattery:
         self.leavetime = arrivaltime + datetime.timedelta(hours = self.time)
         self.present = 0    # If a car is present in the parking lot at a particular time
         
-        # Calculated, for the algorithm's use
+        # For the algorithm's use
         self.avg_chargerate = self.fill / self.time # actual kWh given length of stay
 
         self.need_maxcharge = 0     # If this value is 1, that means that we cannot charge the car to at least 80% during it's stay
                                     # This means this car will always be charged at the maximum charging rate
+        self.grid_perm = 0          # If this value is 1, then the car has 'permission' to buy energy from the grid to charge
+                                    # If this value is 0, then the car cannot demand extra energy from the grid
         
     # =========================================================================
     # This function charges the car by updating the relevant parameters
@@ -61,6 +62,59 @@ class EVbattery:
         else:
             self.latest_maxCR_start = self.arrivaltime + datetime.timedelta(hours = self.time) - datetime.timedelta(hours = self.fill / settings.fastcharge_ulim)
 
+        # Grid energy permissions
+        if self.chargetype == 0:
+            self.min_charge_dur = datetime.timedelta(hours = (settings.end_SOC_req - self.SOC)*self.capacity / settings.slowcharge_ulim)
+        else:
+            self.min_charge_dur = datetime.timedelta(hours = (settings.end_SOC_req - self.SOC)*self.capacity / settings.fastcharge_ulim)
+
+        
+            # If the car is not present then no grid energy demand
+        if self.present == 0 :
+            self.grid_perm = 0
+
+            # If the car is present and need the maxinum chargerate, then allow grid energy demand
+        elif self.need_maxcharge == 1:
+            self.grid_perm = 1
+            
+            # If the car leaves before 7am then allow grid energy demand
+        elif self.present == 1 and \
+             self.leavetime <= datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 7,0):
+                 self.grid_perm = 1
+
+            # If the car leaves between 7am and  4pm, then only allow charging at (leavetime - min_charge_dur)
+        elif self.leavetime <= datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 16,0):
+            if simulation.current_datetime >= (self.leavetime - self.min_charge_dur):
+                self.grid_perm = 1
+            else:
+                self.grid_perm = 0
+
+
+            # If the car leaves between 4pm and 7pm, then only allow charging at (4pm - min_chare_dur)
+        elif self.leavetime <= datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 19,0):
+            if simulation.current_datetime >= datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 16,0) - self.min_charge_dur:
+                self.grid_perm = 1
+            else:
+                self.grid_perm = 0
+                
+            # If the car leaves after 7pm, then only allow charging at (leavetime - min_charge_dur - 3 hours) to avoid red band zone
+        elif self.leavetime > datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 19,0):
+            if simulation.current_datetime >= self.leavetime - self.min_charge_dur - datetime.timedelta (hours = 3):
+                self.grid_perm = 1
+            else:
+                self.grid_perm = 0
+
+            # No charging in the red band time
+        elif simulation.current_datetime.time > datetime.time(16,0) and \
+             simulation.current_datetime.time < datetime.time(19,0):
+                 self.grid_perm = 0
+        else: 
+            self.grid_perm = 0
         
     # =========================================================================
     # This function needs to be ran only at the beginning of the simulation 
