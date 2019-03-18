@@ -18,8 +18,8 @@ class EVbattery:
         self.capacity = capacity  # kWh
         self.SOC = SOC  # proportion charged when arriving in P+R
         self.fill = self.capacity - self.capacity * self.SOC # kWh needed to completely fill battery
-        self.chargetype = chargetype    # Type of charging (slow=0, fast=1) 
-        
+        self.chargetype = chargetype    # Type of charging (slow=0, fast=1)
+
         # Time related
         self.time = time # length of time car will be parked in hours (driver inputs on arrival)
         self.arrivaltime = arrivaltime # When the car arrives in the day
@@ -56,19 +56,14 @@ class EVbattery:
         else:
             self.present = 0
         
-        # Latest time the car can start charging at maximum rate if we want to fill it up completely                            
-        if self.chargetype == 0:
-            self.latest_maxCR_start = self.arrivaltime + datetime.timedelta(hours = self.time) - datetime.timedelta(hours = self.fill / settings.slowcharge_ulim)
-        else:
-            self.latest_maxCR_start = self.arrivaltime + datetime.timedelta(hours = self.time) - datetime.timedelta(hours = self.fill / settings.fastcharge_ulim)
 
-        # Grid energy permissions
+        # Grid energy permission
         if self.chargetype == 0:
             self.min_charge_dur = datetime.timedelta(hours = (settings.end_SOC_req - self.SOC)*self.capacity / settings.slowcharge_ulim)
         else:
             self.min_charge_dur = datetime.timedelta(hours = (settings.end_SOC_req - self.SOC)*self.capacity / settings.fastcharge_ulim)
 
-        
+        # Grid energy permission        
             # If the car is not present then no grid energy demand
         if self.present == 0 :
             self.grid_perm = 0
@@ -97,7 +92,15 @@ class EVbattery:
                                                 simulation.current_datetime.day, 19,0):
             if simulation.current_datetime >= datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
                                                 simulation.current_datetime.day, 16,0) - self.min_charge_dur:
-                self.grid_perm = 1
+
+                # No charging in the red band time           
+                if simulation.current_datetime > datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 16,0) and \
+                    simulation.current_datetime < datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 19,0):
+                        self.grid_perm = 0
+                else: 
+                    self.grid_perm = 1
             else:
                 self.grid_perm = 0
                 
@@ -105,14 +108,17 @@ class EVbattery:
         elif self.leavetime > datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
                                                 simulation.current_datetime.day, 19,0):
             if simulation.current_datetime >= self.leavetime - self.min_charge_dur - datetime.timedelta (hours = 3):
-                self.grid_perm = 1
+                # No charging in the red band time           
+                if simulation.current_datetime > datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 16,0) and \
+                    simulation.current_datetime < datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 19,0):
+                        self.grid_perm = 0
+                else: 
+                    self.grid_perm = 1
             else:
                 self.grid_perm = 0
 
-            # No charging in the red band time
-        elif simulation.current_datetime.time > datetime.time(16,0) and \
-             simulation.current_datetime.time < datetime.time(19,0):
-                 self.grid_perm = 0
         else: 
             self.grid_perm = 0
         

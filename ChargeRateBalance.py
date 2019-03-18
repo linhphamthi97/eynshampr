@@ -26,11 +26,12 @@ def chargeRateBalance (evbatt, simulation):
     # Determining chargegrates
     # =========================================================================
 
-    # Reset chargerate to zero if SOC is 1
+    # Reset chargerate to zero if SOC is 1 or car left the site
     for n in range (1, settings.carnumber + 1):
-        if evbatt["EV{0}".format(n)].SOC >= 1:
+        if evbatt["EV{0}".format(n)].SOC >= 1 or evbatt["EV{0}".format(n)].present == 0:
             evbatt["EV{0}".format(n)].chargerate = 0
             evbatt["EV{0}".format(n)].rel_weigh = 0
+
 
     while pv_energy_available > 0:
         total_weigh = 0
@@ -52,7 +53,33 @@ def chargeRateBalance (evbatt, simulation):
                 evbatt["EV{0}".format(n)].chargerate = 0
                 evbatt["EV{0}".format(n)].rel_weigh = 0
 
+        x = 0
+        y = 0
+        for n in range (1, settings.carnumber + 1):
+            if evbatt["EV{0}".format(n)].present == 1 and evbatt["EV{0}".format(n)].need_maxcharge == 1 and \
+               evbatt["EV{0}".format(n)].chargetype == 0 and evbatt["EV{0}".format(n)].SOC < 1:
+                x += settings.slowcharge_ulim
+            elif evbatt["EV{0}".format(n)].present == 1 and evbatt["EV{0}".format(n)].need_maxcharge == 1 and \
+               evbatt["EV{0}".format(n)].chargetype == 1 and evbatt["EV{0}".format(n)].SOC < 1:
+                x += settings.fastcharge_ulim
+            
+        if x <= 0.7*pv_energy_profile[simulation.current_hour]:
+            if evbatt["EV{0}".format(n)].present == 1 and evbatt["EV{0}".format(n)].need_maxcharge == 1 and \
+               evbatt["EV{0}".format(n)].chargetype == 0 and evbatt["EV{0}".format(n)].SOC < 1:
+                evbatt["EV{0}".format(n)].chargerate = settings.slowcharge_ulim
+                evbatt["EV{0}".format(n)].rel_weigh = 0
+            elif evbatt["EV{0}".format(n)].present == 1 and evbatt["EV{0}".format(n)].need_maxcharge == 1 and \
+               evbatt["EV{0}".format(n)].chargetype == 1 and evbatt["EV{0}".format(n)].SOC < 1:
+                evbatt["EV{0}".format(n)].chargerate = settings.fastcharge_ulim
+                evbatt["EV{0}".format(n)].rel_weigh = 0
+            
+        for n in range (1, settings.carnumber + 1):
+            y += evbatt["EV{0}".format(n)].chargerate
             total_weigh = total_weigh + evbatt["EV{0}".format(n)].rel_weigh
+            
+        pv_energy_available = pv_energy_profile[simulation.current_hour] - y                
+
+        total_weigh = total_weigh + evbatt["EV{0}".format(n)].rel_weigh
             
             
         # =====================================================================
