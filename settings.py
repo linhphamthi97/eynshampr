@@ -18,6 +18,7 @@ slowcharge_ulim = 3         # kW charging upper limit
 fastcharge_ulim = 7         # kW charging upper limit
 
 end_SOC_req = 0.8           # The achievable SOC at leaving below which car is given charging priority
+priority_limit = 0.8        
 
 
 """ Simulation related """

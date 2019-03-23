@@ -31,32 +31,20 @@ def gridEnergyCalculator(evbatt, simulation):
         #======================================================================      
         extra_energy_needed = 0
         
-        # Slow charge
-        if evbatt["EV{0}".format(n)].chargetype == 0 and \
-           (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim)) and \
+        if (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit)) and \
            (evbatt["EV{0}".format(n)].SOC < settings.end_SOC_req) and \
            evbatt["EV{0}".format(n)].present == 1 and \
            evbatt["EV{0}".format(n)].grid_perm == 1:
 
-               if evbatt["EV{0}".format(n)].need_maxcharge == 1:
-                   extra_energy_needed = settings.slowcharge_ulim - evbatt["EV{0}".format(n)].chargerate
-                   evbatt["EV{0}".format(n)].chargerate = settings.slowcharge_ulim                   
-               else:
-                   extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
-                   evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim)
-        # Fast charge
-        elif evbatt["EV{0}".format(n)].chargetype == 1 and \
-             (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim)) and \
-             (evbatt["EV{0}".format(n)].SOC < settings.end_SOC_req) and \
-             evbatt["EV{0}".format(n)].present == 1 and \
-             evbatt["EV{0}".format(n)].grid_perm == 1:
+               # If the car needs the max charge rate or is a premium charging, then buy enough from the grid to provide max charge rate
+               if evbatt["EV{0}".format(n)].need_maxcharge == 1 or evbatt["EV{0}".format(n)].premium:
+                   extra_energy_needed = evbatt["EV{0}".format(n)].crlimit - evbatt["EV{0}".format(n)].chargerate
+                   evbatt["EV{0}".format(n)].chargerate = evbatt["EV{0}".format(n)].crlimit                   
 
-               if evbatt["EV{0}".format(n)].need_maxcharge == 1:
-                   extra_energy_needed = settings.fastcharge_ulim - evbatt["EV{0}".format(n)].chargerate
-                   evbatt["EV{0}".format(n)].chargerate = settings.fastcharge_ulim                   
+               # Otherwise, buy enough to provide the average charge rate
                else:
-                   extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
-                   evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim)
+                   extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit) - evbatt["EV{0}".format(n)].chargerate
+                   evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit)
                  
         #======================================================================
         # Categorizing the energy used into the time bands for finance applications

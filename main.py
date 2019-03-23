@@ -25,7 +25,6 @@ simulation = simulation(settings.starttime, settings.endtime, settings.time_incr
 evbatt, total_ev_demand, total_inst_chargerate = datagen(simulation)
 
 for n in range (1, settings.carnumber + 1):
-    evbatt["EV{0}".format(n)].detNeedMaxCR()
     evbatt["EV{0}".format(n)].statusUpdate(simulation)
 
     # For plotting
