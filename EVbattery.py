@@ -49,7 +49,10 @@ class EVbattery:
                                     # If this value is 0, then the car cannot demand extra energy from the grid
 
         # Minimum charge duration for leaving SOC to hit the requirement (80%)
-        self.min_charge_dur = datetime.timedelta(hours = (settings.end_SOC_req - self.SOC)*self.capacity / self.crlimit)
+        if self.premium == 0:
+            self.min_charge_dur = datetime.timedelta(hours = (settings.end_SOC_req - self.SOC)*self.capacity / self.crlimit)
+        else:
+            self.min_charge_dur = datetime.timedelta(hours = (1 - self.SOC) * self.capacity / self.crlimit)
 
         # Needs the maximum chargerate at all times when present?
         if self.time * self.crlimit <= (settings.end_SOC_req - self.SOC)*self.capacity:
