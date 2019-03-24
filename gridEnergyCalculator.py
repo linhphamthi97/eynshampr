@@ -10,61 +10,69 @@ predicted PV output for the rest of the day.
 import settings
 import numpy as np
 import datetime
+import showResults as sr
 
 
-def gridEnergyCalculator(evbatt, total_grid_energy_needed, red_band_energy, amber_band_energy, green_band_energy):
+def gridEnergyCalculator(evbatt, simulation):
     total_extra_energy_needed = 0
     
-    for n in range(1,settings.carnumber+1):
+    for n in range (1, settings.carnumber + 1):
         
         #======================================================================
         # Picking out the EVs that after the energy division are charging at a 
         # sub-optimal rate (less than the average charging rate) and buying in
-        # energy from the grid to match that average charging rate
+        # energy from the grid to match that average charging rate.
+        #
+        # Conditions to buy from the grid:
+        #   - charging rate less than it's charging limit
+        #   - SOC less than 0.8, i.e our goal for the leaving SOC
+        #   - the EV is present at the site
+        #   - permission to buy from the grid
         #======================================================================      
         extra_energy_needed = 0
         
-        # Slow charge
-        if evbatt["EV{0}".format(n)].chargetype == 0 and \
-           (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim)) and \
-           (evbatt["EV{0}".format(n)].SOC < 1) and \
-           evbatt["EV{0}".format(n)].present == 1:
+        if (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit)) and \
+           (evbatt["EV{0}".format(n)].SOC < settings.end_SOC_req) and \
+           evbatt["EV{0}".format(n)].present == 1 and \
+           evbatt["EV{0}".format(n)].grid_perm == 1:
 
-               extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
-               evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.slowcharge_ulim)
+               # If the car needs the max charge rate or is a premium charging, then buy enough from the grid to provide max charge rate
+               if evbatt["EV{0}".format(n)].need_maxcharge == 1 or evbatt["EV{0}".format(n)].premium:
+                   extra_energy_needed = evbatt["EV{0}".format(n)].crlimit - evbatt["EV{0}".format(n)].chargerate
+                   evbatt["EV{0}".format(n)].chargerate = evbatt["EV{0}".format(n)].crlimit                   
 
-        # Fast charge
-        elif evbatt["EV{0}".format(n)].chargetype == 1 and \
-             (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim)) and \
-             (evbatt["EV{0}".format(n)].SOC < 1) and \
-             evbatt["EV{0}".format(n)].present == 1:
-
-                 extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim) - evbatt["EV{0}".format(n)].chargerate
-                 evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,settings.fastcharge_ulim)
+               # Otherwise, buy enough to provide the average charge rate
+               else:
+                   extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit) - evbatt["EV{0}".format(n)].chargerate
+                   evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit)
                  
         #======================================================================
         # Categorizing the energy used into the time bands for finance applications
         #======================================================================
         # Summing up total energy bought from the grid
-        total_grid_energy_needed += extra_energy_needed * settings.t_inc    # Goes towards total energy bought during the day
-        total_extra_energy_needed += extra_energy_needed * settings.t_inc   # Goes towards total energy bought during that time instant, mainly for visualising
+        sr.grid_energy_needed += extra_energy_needed * simulation.t_inc    # Goes towards total energy bought during the day
+        total_extra_energy_needed += extra_energy_needed * simulation.t_inc   # Goes towards total energy bought during that time instant, mainly for visualising
         
         # Weekday
-        if settings.current_date.weekday() < 5:
-            if settings.current_time >= datetime.time(16,0) and settings.current_time < datetime.time(19,0):
-                red_band_energy += extra_energy_needed * settings.t_inc
-            elif (settings.current_time >= datetime.time(7,0) and settings.current_time < datetime.time(16,0)) \
+        if simulation.current_date.weekday() < 5:
+            if simulation.current_time >= datetime.time(16,0) and simulation.current_time < datetime.time(19,0):
+                sr.red_band_energy += extra_energy_needed * simulation.t_inc
+            elif (simulation.current_time >= datetime.time(7,0) and simulation.current_time < datetime.time(16,0)) \
                  or\
-                 (settings.current_time >= datetime.time(19,0) and settings.current_time < datetime.time(23,0)):
-                     amber_band_energy += extra_energy_needed * settings.t_inc
-            elif (settings.current_time >= datetime.time(0,0) and settings.current_time < datetime.time(7,0)) \
+                 (simulation.current_time >= datetime.time(19,0) and simulation.current_time < datetime.time(23,0)):
+                     sr.amber_band_energy += extra_energy_needed * simulation.t_inc
+            elif (simulation.current_time >= datetime.time(0,0) and simulation.current_time < datetime.time(7,0)) \
                  or\
-                 settings.current_time >= datetime.time(23,0):
-                     green_band_energy += extra_energy_needed * settings.t_inc
+                 simulation.current_time >= datetime.time(23,0):
+                     sr.green_band_energy += extra_energy_needed * simulation.t_inc
         
         # Weekend
         else: 
-            green_band_energy += extra_energy_needed * settings.t_inc
+            sr.green_band_energy += extra_energy_needed * simulation.t_inc
     
-                
-    return evbatt, total_grid_energy_needed, total_extra_energy_needed, red_band_energy, amber_band_energy, green_band_energy
+    #==========================================================================
+    # For plotting
+    #==========================================================================
+    sr.grid_energy.append(total_extra_energy_needed)
+                     
+    return evbatt
