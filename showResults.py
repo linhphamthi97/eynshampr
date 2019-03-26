@@ -32,13 +32,14 @@ def showResults(evbatt, simulation):
     # Print energy balance values
     # =========================================================================
     # PV energy
-    pv_energy_profile = np.loadtxt('total_' + str(simulation.current_datetime.month) + '_kWh.txt')
-    total_daily_pv_energy = 0
-    for n in range (1,25):
-        total_daily_pv_energy += pv_energy_profile[n]
-    print('Total daily PV energy: ' , np.around(total_daily_pv_energy, decimals = 1), ' kWh')
+    if simulation.starttime_date == simulation.endtime_date:
+        pv_energy_profile = np.loadtxt('total_' + str(simulation.current_datetime.month) + '_kWh.txt')
+        total_daily_pv_energy = 0
+        for n in range (1,25):
+            total_daily_pv_energy += pv_energy_profile[n]
+        print('Total daily PV energy: ' , np.around(total_daily_pv_energy, decimals = 1), ' kWh')
 
-    print('Leftover energy from PV: ', np.around(np.clip(pv_leftover_energy, 0, None), decimals = 1), 'kWh')
+    print('Total leftover energy from PV: ', np.around(np.clip(pv_leftover_energy, 0, None), decimals = 1), 'kWh')
     
     # Grid energy
     print('')
@@ -55,36 +56,48 @@ def showResults(evbatt, simulation):
     print('Cost of energy bought from the grid: ', np.around(energy_cost, decimals = 1), ' GBP')
     
     
+
     # =========================================================================
-    # SOC graphs
+    # SOC graphs, shown only for 1-day simulations
     # =========================================================================
-    for n in range(1,settings.carnumber+1):
-        SOC_after_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
+    if simulation.starttime_date == simulation.endtime_date:
+        for n in range(1,settings.carnumber+1):
+            SOC_after_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
+        
+        # Before
+        y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
+        plt.rcParams["figure.figsize"] = [8,6]
+        plt.barh(y_axis, SOC_before_plot)
+        plt.ylim(bottom=0)
+        plt.title('State of charge of the EVs before charging')
+        plt.xlabel('State of charge [%]')
+        plt.show()
     
-    """ Before """
-    y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
-    plt.rcParams["figure.figsize"] = [8,6]
-    plt.barh(y_axis, SOC_before_plot)
-    plt.ylim(bottom=0)
-    plt.title('State of charge of the EVs before charging')
-    plt.xlabel('State of charge [%]')
-    plt.show()
-    
-    """ After """
-    y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
-    plt.rcParams["figure.figsize"] = [8,6]
-    plt.barh(y_axis, SOC_after_plot)
-    plt.ylim(bottom=0)
-    plt.title('State of charge of the EVs after charging')
-    plt.xlabel('State of charge [%]')
-    plt.show()
+        # After
+        y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
+        plt.rcParams["figure.figsize"] = [8,6]
+        plt.barh(y_axis, SOC_after_plot)
+        plt.ylim(bottom=0)
+        plt.title('State of charge of the EVs after charging')
+        plt.xlabel('State of charge [%]')
+        plt.show()
+
     
     # =========================================================================
     # Grid energy demand graph (how much energy is bought from the grid vs time)
     # =========================================================================
+    plt.rcParams["figure.figsize"] = [15,5]
     plt.plot(x_axis,grid_energy,'black')
-    plt.gcf().autofmt_xdate()
-    myFmt = mdates.DateFormatter('%H:%M')
+    
+    # Show time only if we are running a 1-day simulation, otherwise show date (and time for simulations shorter than 5 days)
+    if simulation.starttime_date == simulation.endtime_date:
+        myFmt = mdates.DateFormatter('%H:%M')
+    elif (simulation.endtime_date - simulation.starttime_date).days < 5:
+        plt.gcf().autofmt_xdate()
+        myFmt = mdates.DateFormatter('%d/%m/%y %H:%M')
+    else:
+        myFmt = mdates.DateFormatter('%d/%m/%y')
+        
     plt.gca().xaxis.set_major_formatter(myFmt)
     plt.ylim(bottom = 0)
     plt.xlim(left = settings.starttime , right = settings.endtime)
@@ -92,21 +105,35 @@ def showResults(evbatt, simulation):
     plt.xlabel('Time')
     plt.ylabel('Energy [kW]')
     
-    """ Creating the time bands based on DUOS charges """
-    plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, settings.starttime.hour, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,7,0), facecolor='green', alpha=0.5)
-    plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, 7, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,16,0), facecolor='yellow', alpha=0.5)
-    plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, 16, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,19,0), facecolor='red', alpha=0.5)
-    plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, 19, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,23,0), facecolor='yellow', alpha=0.5)
-    plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, 23, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,23,59), facecolor='green', alpha=0.5)
-    
+
+    # Creating the time bands based on DUOS charges, shown for 1-day simulation only    
+    if simulation.starttime_date == simulation.endtime_date:
+        if simulation.starttime_date.weekday() < 5:
+            plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, settings.starttime.hour, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,7,0), facecolor='green', alpha=0.5)
+            plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, 7, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,16,0), facecolor='yellow', alpha=0.5)
+            plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, 16, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,19,0), facecolor='red', alpha=0.5)
+            plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, 19, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,23,0), facecolor='yellow', alpha=0.5)
+            plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, 23, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,23,59), facecolor='green', alpha=0.5)
+        else: 
+            plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, settings.starttime.hour, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,23,59), facecolor='green', alpha=0.5)
+            
     plt.show()
     
     # =========================================================================
     # Unused PV energy graph (how much PV energy is left unused vs time)
     # =========================================================================
+    plt.rcParams["figure.figsize"] = [15,5]
     plt.plot(x_axis,unused_pv_energy,'black')
-    plt.gcf().autofmt_xdate()
-    myFmt = mdates.DateFormatter('%H:%M')
+
+    # Show time only if we are running a 1-day simulation, otherwise show date (and time for simulations shorter than 5 days)
+    if simulation.starttime_date == simulation.endtime_date:
+        myFmt = mdates.DateFormatter('%H:%M')
+    elif (simulation.endtime_date - simulation.starttime_date).days < 5:
+        plt.gcf().autofmt_xdate()
+        myFmt = mdates.DateFormatter('%d/%m/%y  %H:%M')
+    else:
+        myFmt = mdates.DateFormatter('%d/%m/%y')
+        
     plt.gca().xaxis.set_major_formatter(myFmt)
     plt.ylim(bottom = 0)
     plt.xlim(left = settings.starttime , right = settings.endtime)
