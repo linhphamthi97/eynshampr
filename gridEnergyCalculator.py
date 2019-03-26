@@ -16,7 +16,7 @@ import showResults as sr
 def gridEnergyCalculator(evbatt, simulation):
     total_extra_energy_needed = 0
     
-    for n in range (1, settings.carnumber + 1):
+    for n in range (1, settings.vnumber + 1):
         
         #======================================================================
         # Picking out the EVs that after the energy division are charging at a 

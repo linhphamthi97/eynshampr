@@ -21,14 +21,16 @@ class EVbattery:
         self.capacity = capacity  # kWh
         self.SOC = SOC  # proportion charged when arriving in P+R
         self.fill = self.capacity - self.capacity * self.SOC # kWh needed to completely fill battery
-        self.chargetype = chargetype    # Type of charging (slow=0, fast=1)
+        self.chargetype = chargetype    # Type of charging (slow=0, fast=1, rapid=2)
         self.premium = premium          # Premium charging, i.e car is guaranteed to charge to 100% is physically possible
         
             # Charging rate limit
         if self.chargetype == 0:
             self.crlimit = settings.slowcharge_ulim
-        else:
+        elif self.chargetype == 1:
             self.crlimit = settings.fastcharge_ulim
+        else:
+            self.crlimit = settings.rapidcharge_ulim
 
         # =====================================================================
         # Time related
@@ -68,6 +70,7 @@ class EVbattery:
         self.fill = np.clip((self.fill - self.chargerate * simulation.t_inc), 0, self.capacity)
 #        self.SOC = (self.capacity - self.fill)/self.capacity   # This line is for debugging
         self.SOC = np.clip((self.capacity - self.fill) / self.capacity, 0, 1) # This is the real expression to use for final program
+        
         self.avg_chargerate = np.clip(self.fill / ((self.leavetime - simulation.current_datetime).total_seconds()/3600) , 0 , None)
 
 
@@ -77,7 +80,7 @@ class EVbattery:
     def statusUpdate(self, simulation):
         
         # Present at the site or not
-        if (self.arrivaltime <= simulation.current_datetime) and (simulation.current_datetime <= self.leavetime):
+        if (self.arrivaltime <= simulation.current_datetime) and (simulation.current_datetime < self.leavetime):
             self.present = 1
         else:
             self.present = 0     
@@ -89,8 +92,8 @@ class EVbattery:
         if self.present == 0 :
             self.grid_perm = 0
 
-        # If the car is present and need the maxinum chargerate, then allow grid energy demand
-        elif self.need_maxcharge == 1:
+        # If the car is present and need the maxinum chargerate or is a bus, then allow grid energy demand
+        elif self.need_maxcharge == 1 or self.chargetype == 2:
             self.grid_perm = 1
             
         # If the car leaves before 7am then allow grid energy demand

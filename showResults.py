@@ -61,24 +61,24 @@ def showResults(evbatt, simulation):
     # SOC graphs, shown only for 1-day simulations
     # =========================================================================
     if simulation.starttime_date == simulation.endtime_date:
-        for n in range(1,settings.carnumber+1):
+        for n in range(1,settings.vnumber+1):
             SOC_after_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
         
         # Before
         y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
         plt.rcParams["figure.figsize"] = [8,6]
-        plt.barh(y_axis, SOC_before_plot)
+        plt.barh(y_axis, SOC_before_plot[1:settings.carnumber])
         plt.ylim(bottom=0)
-        plt.title('State of charge of the EVs before charging')
+        plt.title('State of charge of the EVs (cars) before charging')
         plt.xlabel('State of charge [%]')
         plt.show()
     
         # After
         y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
         plt.rcParams["figure.figsize"] = [8,6]
-        plt.barh(y_axis, SOC_after_plot)
+        plt.barh(y_axis, SOC_after_plot[1:settings.carnumber])
         plt.ylim(bottom=0)
-        plt.title('State of charge of the EVs after charging')
+        plt.title('State of charge of the EVs (cars) after charging')
         plt.xlabel('State of charge [%]')
         plt.show()
 

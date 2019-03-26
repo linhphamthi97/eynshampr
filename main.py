@@ -32,7 +32,7 @@ while simulation.current_datetime < simulation.endtime:
     if simulation.current_date != simulation.last_date:
         evbatt, total_ev_demand, total_inst_chargerate = datagen(simulation)
         
-        for n in range (1, settings.carnumber + 1):
+        for n in range (1, settings.vnumber + 1):
             evbatt["EV{0}".format(n)].statusUpdate(simulation)
         
             # For plotting
@@ -50,7 +50,7 @@ while simulation.current_datetime < simulation.endtime:
     # =========================================================================
     # Charging
     # =========================================================================
-    for n in range (1, settings.carnumber + 1):
+    for n in range (1, settings.vnumber + 1):
         evbatt["EV{0}".format(n)].charge(simulation)
     
     # =========================================================================
@@ -58,7 +58,7 @@ while simulation.current_datetime < simulation.endtime:
     # =========================================================================
     simulation.timeUpdate()
     
-    for n in range (1, settings.carnumber + 1):    
+    for n in range (1, settings.vnumber + 1):    
         evbatt["EV{0}".format(n)].statusUpdate(simulation)
 
 # =============================================================================

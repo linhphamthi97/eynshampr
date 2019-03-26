@@ -21,8 +21,10 @@ def datagen(simulation):
                                 # sustained constantly, will change the cars fully
                                 # by the time they leaves                       
     
-    # Iterating to generate the EV battery attributes
-    for n in range(1,(settings.carnumber+1)):
+    # Creating instances of the EV battery class
+    for n in range(1,(settings.carnumber + settings.busnumber + 1)):
+        # CAR instances
+        if n <= settings.carnumber:
                                                 # Battery capacity        
             evbatt["EV{0}".format(n)]=EVbattery(32,\
                                                 # State of charge
@@ -36,6 +38,22 @@ def datagen(simulation):
                                                 # Time of arrival, year, month, day set in settings, hour and minute randomized
                                                 datetime.datetime(simulation.current_datetime.year,simulation.current_datetime.month,\
                                                                   simulation.current_datetime.day,int(np.clip(random.gauss(8,3),6,23)), random.randint(0,59)))
+        # BUS instances
+        else: 
+                                                # Battery capacity        
+            evbatt["EV{0}".format(n)]=EVbattery(320,\
+                                                # State of charge
+                                                np.clip(random.gauss(0.5,0.15), 0, None),\
+                                                # Premium charging?
+                                                0, \
+                                                # Type of charging, 0 for slow, 1 for fast
+                                                2,\
+                                                # Length of stay in hours
+                                                settings.buschargelength,\
+                                                # Time of arrival, year, month, day set in settings, hour and minute randomized
+                                                datetime.datetime(simulation.current_datetime.year,simulation.current_datetime.month,\
+                                                                  simulation.current_datetime.day,5,0) + \
+                                                                  datetime.timedelta (hours = (settings.closetime - settings.opentime) / settings.busnumber) * (n - settings.carnumber))
 
             total_ev_demand = total_ev_demand + evbatt["EV{0}".format(n)].fill
             total_inst_chargerate = total_inst_chargerate + evbatt["EV{0}".format(n)].avg_chargerate

@@ -19,7 +19,7 @@ def chargeRateBalance (evbatt, simulation):
     
     pv_energy_available = pv_energy_profile[simulation.current_hour]
     
-    for n in range (1, settings.carnumber + 1):
+    for n in range (1, settings.vnumber + 1):
         evbatt["EV{0}".format(n)].chargerate = 0
 
     # =========================================================================
@@ -27,7 +27,7 @@ def chargeRateBalance (evbatt, simulation):
     # =========================================================================
 
     # Reset chargerate to zero if SOC is 1 or car left the site
-    for n in range (1, settings.carnumber + 1):
+    for n in range (1, settings.vnumber + 1):
         if evbatt["EV{0}".format(n)].SOC >= 1 or evbatt["EV{0}".format(n)].present == 0:
             evbatt["EV{0}".format(n)].chargerate = 0
             evbatt["EV{0}".format(n)].rel_weigh = 0
@@ -38,7 +38,7 @@ def chargeRateBalance (evbatt, simulation):
         # =====================================================================
         # Terms for the weighted average
         # =====================================================================     
-        for n in range (1, settings.carnumber + 1):
+        for n in range (1, settings.vnumber + 1):
             
             # If the charging port is already at its limit, give no weight, otherwise use parameters to determine weighting
             if evbatt["EV{0}".format(n)].chargerate == evbatt["EV{0}".format(n)].crlimit:
@@ -53,19 +53,19 @@ def chargeRateBalance (evbatt, simulation):
 
         x = 0
         y = 0
-        for n in range (1, settings.carnumber + 1):
+        for n in range (1, settings.vnumber + 1):
             if evbatt["EV{0}".format(n)].present == 1 and evbatt["EV{0}".format(n)].need_maxcharge == 1\
                and evbatt["EV{0}".format(n)].SOC < 1:
                 x += evbatt["EV{0}".format(n)].crlimit
 
             
-        if x <= settings.priority_limit*pv_energy_profile[simulation.current_hour]:
+        if x <= settings.priority_limit * pv_energy_profile[simulation.current_hour]:
             if evbatt["EV{0}".format(n)].present == 1 and evbatt["EV{0}".format(n)].need_maxcharge == 1\
                and evbatt["EV{0}".format(n)].SOC < 1:
                 evbatt["EV{0}".format(n)].chargerate = evbatt["EV{0}".format(n)].crlimit
                 evbatt["EV{0}".format(n)].rel_weigh = 0
             
-        for n in range (1, settings.carnumber + 1):
+        for n in range (1, settings.vnumber + 1):
             y += evbatt["EV{0}".format(n)].chargerate
             total_weigh = total_weigh + evbatt["EV{0}".format(n)].rel_weigh
             
@@ -82,7 +82,7 @@ def chargeRateBalance (evbatt, simulation):
             sr.pv_leftover_energy += pv_energy_available * simulation.t_inc 
 
             pv_energy_available = pv_energy_profile[simulation.current_hour]
-            for n in range (1, settings.carnumber + 1):
+            for n in range (1, settings.vnumber + 1):
                 pv_energy_available = pv_energy_available - evbatt["EV{0}".format(n)].chargerate            
             
             break
@@ -90,7 +90,7 @@ def chargeRateBalance (evbatt, simulation):
         # =====================================================================
         # Calculating charging rates
         # =====================================================================  
-        for n in range (1, settings.carnumber + 1):
+        for n in range (1, settings.vnumber + 1):
             # Calculating the chargerate with the weighted division on energy available
             evbatt["EV{0}".format(n)].chargerate = evbatt["EV{0}".format(n)].chargerate + (pv_energy_available * evbatt["EV{0}".format(n)].rel_weigh / total_weigh)
             
@@ -103,7 +103,7 @@ def chargeRateBalance (evbatt, simulation):
         # Calculating leftover energy after the clip
         # =====================================================================  
         total_chargerate = 0
-        for n in range (1, settings.carnumber + 1):
+        for n in range (1, settings.vnumber + 1):
             total_chargerate += evbatt["EV{0}".format(n)].chargerate
         
         pv_energy_available = pv_energy_profile[simulation.current_hour] - total_chargerate
