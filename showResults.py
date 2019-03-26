@@ -90,7 +90,7 @@ def showResults(evbatt, simulation):
     plt.xlim(left = settings.starttime , right = settings.endtime)
     plt.title('Energy bought from the grid')
     plt.xlabel('Time')
-    plt.ylabel('Energy [kWh]')
+    plt.ylabel('Energy [kW]')
     
     """ Creating the time bands based on DUOS charges """
     plt.axvspan(datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day, settings.starttime.hour, 0), datetime.datetime(settings.starttime.year,settings.starttime.month,settings.starttime.day,7,0), facecolor='green', alpha=0.5)
@@ -112,5 +112,5 @@ def showResults(evbatt, simulation):
     plt.xlim(left = settings.starttime , right = settings.endtime)
     plt.title('Unused PV energy throughout the day')
     plt.xlabel('Time')
-    plt.ylabel('Energy [kWh]')
+    plt.ylabel('Energy [kW]')
     plt.show()    

@@ -22,7 +22,7 @@ priority_limit = 0.8
 
 
 """ Simulation related """
-starttime = datetime.datetime(2020,1,10,6,0,0)     # Selected date for simulation, start time of simulation
+starttime = datetime.datetime(2020,12,10,6,0,0)     # Selected date for simulation, start time of simulation
 endtime = datetime.datetime(starttime.year,starttime.month,starttime.day,23,0)     # End time of simulation
 time_increment = 0.05                 # [hours]
            
