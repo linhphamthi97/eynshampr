@@ -115,5 +115,6 @@ def chargeRateBalance (evbatt, simulation):
  
     # For plotting unused PV energy
     sr.unused_pv_energy.append(pv_energy_available)
+    sr.unused_pv_energy_day += pv_energy_available
        
     return evbatt

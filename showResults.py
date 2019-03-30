@@ -19,12 +19,17 @@ red_band_energy = 0
 amber_band_energy = 0
 green_band_energy = 0
 pv_energy_available = 0
+grid_energy_needed_day = 0
+unused_pv_energy_day = 0
 
 SOC_before_plot = list()
 SOC_after_plot = list()
 x_axis = list()     # An x axis containing the timestamps of the simulation
+longs_x_axis = list() # An x axis containing the days for long simulations
 grid_energy = list()
 unused_pv_energy = list()
+daily_grid_energy = list()
+daily_unused_pv_energy = list()
 
 def showResults(evbatt, simulation):
     
@@ -103,7 +108,7 @@ def showResults(evbatt, simulation):
     plt.xlim(left = settings.starttime , right = settings.endtime)
     plt.title('Energy bought from the grid')
     plt.xlabel('Time')
-    plt.ylabel('Energy [kW]')
+    plt.ylabel('Energy [kWh]')
     
 
     # Creating the time bands based on DUOS charges, shown for 1-day simulation only    
@@ -139,5 +144,37 @@ def showResults(evbatt, simulation):
     plt.xlim(left = settings.starttime , right = settings.endtime)
     plt.title('Unused PV energy throughout the day')
     plt.xlabel('Time')
-    plt.ylabel('Energy [kW]')
-    plt.show()    
+    plt.ylabel('Energy [kWh]')
+    plt.show()
+
+
+#%% THE FOLLOWING GRAPHS WILL ONLY SHOW FOR SIMULATIONS LONGER THAN 3 DAYS    
+    if (simulation.endtime_date - simulation.starttime_date).days > 3:
+        # =========================================================================
+        # Grid energy demand graph (how much energy is bought from the grid vs time) - daily totals
+        # =========================================================================
+        plt.rcParams["figure.figsize"] = [15,5]
+        plt.plot(longs_x_axis, daily_grid_energy, 'black')
+        myFmt = mdates.DateFormatter('%d/%m/%y')
+        plt.gca().xaxis.set_major_formatter(myFmt)
+        plt.ylim(bottom = 0)
+        plt.xlim(left = settings.starttime , right = settings.endtime)
+        plt.title('Energy bought from the grid - daily totals')
+        plt.xlabel('Time')
+        plt.ylabel('Energy [kWh]')
+        
+        plt.show()
+        
+        # =========================================================================
+        # Unused PV energy graph (how much PV energy is left unused vs time) - daily totals
+        # =========================================================================
+        plt.rcParams["figure.figsize"] = [15,5]
+        plt.plot(longs_x_axis, np.divide(daily_unused_pv_energy, 1000), 'black')
+        myFmt = mdates.DateFormatter('%d/%m/%y')
+        plt.gca().xaxis.set_major_formatter(myFmt)
+        plt.ylim(bottom = 0)
+        plt.xlim(left = settings.starttime , right = settings.endtime)
+        plt.title('Unused PV energy - daily totals')
+        plt.xlabel('Time')
+        plt.ylabel('Energy [MWh]')
+        plt.show()

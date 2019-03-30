@@ -50,7 +50,8 @@ def gridEnergyCalculator(evbatt, simulation):
         # Categorizing the energy used into the time bands for finance applications
         #======================================================================
         # Summing up total energy bought from the grid
-        sr.grid_energy_needed += extra_energy_needed * simulation.t_inc    # Goes towards total energy bought during the day
+        sr.grid_energy_needed += extra_energy_needed * simulation.t_inc     # Goes towards total energy bought during the simulation
+        sr.grid_energy_needed_day += extra_energy_needed * simulation.t_inc # Goes towards total energy bought during the day
         total_extra_energy_needed += extra_energy_needed * simulation.t_inc   # Goes towards total energy bought during that time instant, mainly for visualising
         
         # Weekday

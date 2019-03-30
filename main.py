@@ -17,7 +17,7 @@ from datagen import datagen
 from gridEnergyCalculator import gridEnergyCalculator
 
 # =============================================================================
-# Set up simulation and generate data
+# Set up simulation
 # =============================================================================
 simulation = simulation(settings.starttime, settings.endtime, settings.time_increment)
     
@@ -27,7 +27,7 @@ simulation = simulation(settings.starttime, settings.endtime, settings.time_incr
 
 while simulation.current_datetime < simulation.endtime:
     # =========================================================================
-    # Generate a new set of data for EV batteries if it's a new day
+    # Generate a new set of data for every new day, add totals of last day to results
     # =========================================================================
     if simulation.current_date != simulation.last_date:
         evbatt, total_ev_demand, total_inst_chargerate = datagen(simulation)
@@ -38,8 +38,16 @@ while simulation.current_datetime < simulation.endtime:
             # For plotting
             sr.SOC_before_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
         
+        # For plotting
+        sr.longs_x_axis.append(simulation.current_date)
+        sr.daily_grid_energy.append(sr.grid_energy_needed_day)
+        sr.grid_energy_needed_day = 0
+        sr.daily_unused_pv_energy.append(sr.unused_pv_energy_day)
+        sr.unused_pv_energy_day = 0
+        
     # For plotting
     sr.x_axis.append(simulation.current_datetime)
+
     
     # =========================================================================
     # Calculating distribution and buy from grid
@@ -64,4 +72,8 @@ while simulation.current_datetime < simulation.endtime:
 # =============================================================================
 # Show results of the simulation
 # =============================================================================
+sr.longs_x_axis.append(simulation.current_date)
+sr.daily_grid_energy.append(sr.grid_energy_needed_day)
+sr.daily_unused_pv_energy.append(sr.unused_pv_energy_day)
+
 sr.showResults(evbatt, simulation)
