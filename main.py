@@ -17,9 +17,10 @@ from datagen import datagen
 from gridEnergyCalculator import gridEnergyCalculator
 
 # =============================================================================
-# Set up simulation
+# Set up simulation and PV
 # =============================================================================
 simulation = simulation(settings.starttime, settings.endtime, settings.time_increment)
+solar_profile = settings.pv_site1.getOutput(settings.dt)
     
 # =============================================================================
 # Simulation
@@ -38,6 +39,9 @@ while simulation.current_datetime < simulation.endtime:
             # For plotting
             sr.SOC_before_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
         
+        # Picks the range for solar profile corresponding to the day
+        simulation.rangepick()
+        
         # For plotting
         sr.longs_x_axis.append(simulation.current_date)
         sr.daily_grid_energy.append(sr.grid_energy_needed_day)
@@ -47,12 +51,11 @@ while simulation.current_datetime < simulation.endtime:
         
     # For plotting
     sr.x_axis.append(simulation.current_datetime)
-
     
     # =========================================================================
     # Calculating distribution and buy from grid
     # =========================================================================
-    evbatt = chargeRateBalance(evbatt, simulation)
+    evbatt = chargeRateBalance(evbatt, simulation, solar_profile)
     evbatt = gridEnergyCalculator(evbatt, simulation)
     
     # =========================================================================

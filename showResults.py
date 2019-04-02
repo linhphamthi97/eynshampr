@@ -92,7 +92,7 @@ def showResults(evbatt, simulation):
     # Grid energy demand graph (how much energy is bought from the grid vs time)
     # =========================================================================
     plt.rcParams["figure.figsize"] = [15,5]
-    plt.plot(x_axis,grid_energy,'black')
+    plt.plot(x_axis,grid_energy)
     
     # Show time only if we are running a 1-day simulation, otherwise show date (and time for simulations shorter than 5 days)
     if simulation.starttime_date == simulation.endtime_date:
@@ -128,7 +128,7 @@ def showResults(evbatt, simulation):
     # Unused PV energy graph (how much PV energy is left unused vs time)
     # =========================================================================
     plt.rcParams["figure.figsize"] = [15,5]
-    plt.plot(x_axis,unused_pv_energy,'black')
+    plt.plot(x_axis,unused_pv_energy)
 
     # Show time only if we are running a 1-day simulation, otherwise show date (and time for simulations shorter than 5 days)
     if simulation.starttime_date == simulation.endtime_date:
@@ -154,7 +154,7 @@ def showResults(evbatt, simulation):
         # Grid energy demand graph (how much energy is bought from the grid vs time) - daily totals
         # =========================================================================
         plt.rcParams["figure.figsize"] = [15,5]
-        plt.plot(longs_x_axis, daily_grid_energy, 'black')
+        plt.plot(longs_x_axis, daily_grid_energy)
         myFmt = mdates.DateFormatter('%d/%m/%y')
         plt.gca().xaxis.set_major_formatter(myFmt)
         plt.ylim(bottom = 0)
@@ -169,7 +169,7 @@ def showResults(evbatt, simulation):
         # Unused PV energy graph (how much PV energy is left unused vs time) - daily totals
         # =========================================================================
         plt.rcParams["figure.figsize"] = [15,5]
-        plt.plot(longs_x_axis, np.divide(daily_unused_pv_energy, 1000), 'black')
+        plt.plot(longs_x_axis, np.divide(daily_unused_pv_energy, 1000))
         myFmt = mdates.DateFormatter('%d/%m/%y')
         plt.gca().xaxis.set_major_formatter(myFmt)
         plt.ylim(bottom = 0)

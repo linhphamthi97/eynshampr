@@ -57,6 +57,5 @@ def datagen(simulation):
 
             total_ev_demand = total_ev_demand + evbatt["EV{0}".format(n)].fill
             total_inst_chargerate = total_inst_chargerate + evbatt["EV{0}".format(n)].avg_chargerate
-            
     
     return evbatt, total_ev_demand, total_inst_chargerate

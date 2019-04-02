@@ -45,8 +45,6 @@ class EVbattery:
         # =====================================================================
         self.avg_chargerate = self.fill / self.time
 
-        self.need_maxcharge = 0     # If this value is 1, that means that we cannot charge the car to at least 80% during it's stay
-                                    # This means this car will always be charged at the maximum charging rate
         self.grid_perm = 0          # If this value is 1, then the car has 'permission' to buy energy from the grid to charge
                                     # If this value is 0, then the car cannot demand extra energy from the grid
 

@@ -11,11 +11,11 @@ import numpy as np
 import sys
 import showResults as sr
 
-def chargeRateBalance (evbatt, simulation):
+def chargeRateBalance (evbatt, simulation, solar_profile):
     # =========================================================================
     # Initialising variables
     # =========================================================================
-    pv_energy_profile = np.loadtxt('total_' + str(simulation.current_datetime.month) + '_kWh.txt')
+    pv_energy_profile = solar_profile[simulation.PVrange_begin : simulation.PVrange_end]
     
     pv_energy_available = pv_energy_profile[simulation.current_hour]
     
