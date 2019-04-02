@@ -8,6 +8,9 @@ author: Linh Pham Thi
 # =============================================================================
 # Importing neccessary Python libraries and modules, initializing variables
 # =============================================================================
+import warnings
+warnings.filterwarnings("ignore")
+
 import settings 
 import showResults as sr
 

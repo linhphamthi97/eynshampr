@@ -58,7 +58,7 @@ def showResults(evbatt, simulation):
     energy_cost = red_band_energy * settings.red_energy_cost \
                     + amber_band_energy * settings.amber_energy_cost \
                     + green_band_energy * settings.green_energy_cost
-    print('Cost of energy bought from the grid: ', np.around(energy_cost, decimals = 1), ' GBP')
+    print('Cost of energy bought from the grid: ', int(energy_cost), ' GBP')
     
     
 
@@ -142,7 +142,7 @@ def showResults(evbatt, simulation):
     plt.gca().xaxis.set_major_formatter(myFmt)
     plt.ylim(bottom = 0)
     plt.xlim(left = settings.starttime , right = settings.endtime)
-    plt.title('Unused PV energy throughout the day')
+    plt.title('Unused PV energy')
     plt.xlabel('Time')
     plt.ylabel('Energy [kWh]')
     plt.show()
