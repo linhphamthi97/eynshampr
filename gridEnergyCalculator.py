@@ -52,7 +52,7 @@ def gridEnergyCalculator(evbatt, simulation):
         # Summing up total energy bought from the grid
         sr.grid_energy_needed += extra_energy_needed * simulation.t_inc     # Goes towards total energy bought during the simulation
         sr.grid_energy_needed_day += extra_energy_needed * simulation.t_inc # Goes towards total energy bought during the day
-        total_extra_energy_needed += extra_energy_needed * simulation.t_inc   # Goes towards total energy bought during that time instant, mainly for visualising
+        total_extra_energy_needed += extra_energy_needed                    # Goes towards total energy bought during that time instant, mainly for visualising
         
         # Weekday
         if simulation.current_date.weekday() < 5:

@@ -41,7 +41,7 @@ while simulation.current_datetime < simulation.endtime:
         
             # For plotting
             sr.SOC_before_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
-        
+            
         # Picks the range for solar profile corresponding to the day
         simulation.rangepick()
         
@@ -59,6 +59,10 @@ while simulation.current_datetime < simulation.endtime:
     # Calculating distribution and buy from grid
     # =========================================================================
     evbatt = chargeRateBalance(evbatt, simulation, solar_profile)
+    
+#    for n in range (1, settings.vnumber + 1):
+#            evbatt["EV{0}".format(n)].gridpermission = 1
+    
     evbatt = gridEnergyCalculator(evbatt, simulation)
     
     # =========================================================================
@@ -74,6 +78,7 @@ while simulation.current_datetime < simulation.endtime:
     
     for n in range (1, settings.vnumber + 1):    
         evbatt["EV{0}".format(n)].statusUpdate(simulation)
+    
 
 # =============================================================================
 # Show results of the simulation

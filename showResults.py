@@ -31,7 +31,7 @@ unused_pv_energy = list()
 daily_grid_energy = list()
 daily_unused_pv_energy = list()
 
-def showResults(evbatt, simulation):
+def showResults(evbatt, simulation):  
     
     # =========================================================================
     # Print energy balance values
@@ -66,13 +66,13 @@ def showResults(evbatt, simulation):
     # SOC graphs, shown only for 1-day simulations
     # =========================================================================
     if simulation.starttime_date == simulation.endtime_date:
-        for n in range(1,settings.vnumber+1):
-            SOC_after_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
+        for n in range(1, settings.carnumber + 1):
+            SOC_after_plot.append(float(evbatt["EV{0}".format(n)].SOC * 100))
         
         # Before
         y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
         plt.rcParams["figure.figsize"] = [8,6]
-        plt.barh(y_axis, SOC_before_plot[1:settings.carnumber])
+        plt.barh(y_axis, SOC_before_plot[0:settings.carnumber])
         plt.ylim(bottom=0)
         plt.title('State of charge of the EVs (cars) before charging')
         plt.xlabel('State of charge [%]')
@@ -81,7 +81,7 @@ def showResults(evbatt, simulation):
         # After
         y_axis = np.linspace(1,settings.carnumber,settings.carnumber) 
         plt.rcParams["figure.figsize"] = [8,6]
-        plt.barh(y_axis, SOC_after_plot[1:settings.carnumber])
+        plt.barh(y_axis, SOC_after_plot)
         plt.ylim(bottom=0)
         plt.title('State of charge of the EVs (cars) after charging')
         plt.xlabel('State of charge [%]')
@@ -106,9 +106,9 @@ def showResults(evbatt, simulation):
     plt.gca().xaxis.set_major_formatter(myFmt)
     plt.ylim(bottom = 0)
     plt.xlim(left = settings.starttime , right = settings.endtime)
-    plt.title('Energy bought from the grid')
+    plt.title('Power bought from the grid')
     plt.xlabel('Time')
-    plt.ylabel('Energy [kWh]')
+    plt.ylabel('Power [kW]')
     
 
     # Creating the time bands based on DUOS charges, shown for 1-day simulation only    
@@ -142,9 +142,9 @@ def showResults(evbatt, simulation):
     plt.gca().xaxis.set_major_formatter(myFmt)
     plt.ylim(bottom = 0)
     plt.xlim(left = settings.starttime , right = settings.endtime)
-    plt.title('Unused PV energy')
+    plt.title('Unused solar power')
     plt.xlabel('Time')
-    plt.ylabel('Energy [kWh]')
+    plt.ylabel('Power [kW]')
     plt.show()
 
 
@@ -174,7 +174,7 @@ def showResults(evbatt, simulation):
         plt.gca().xaxis.set_major_formatter(myFmt)
         plt.ylim(bottom = 0)
         plt.xlim(left = settings.starttime , right = settings.endtime)
-        plt.title('Unused PV energy - daily totals')
+        plt.title('Unused solar energy - daily totals')
         plt.xlabel('Time')
         plt.ylabel('Energy [MWh]')
         plt.show()
