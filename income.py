@@ -6,11 +6,11 @@ Created on Mon Feb 11 00:35:00 2019
 """
 
 """income"""
-def income(num_spaces):
+def income(num_spaces,threeWCost,sevenWCost,fiftyWCost,threeW,sevenW,fiftyW):
     """ advertising revenue per parking space 18 avg per space"""
-
+    
     advertising = 18 * num_spaces
-    #parkingticket = 2 *num_visitors
-    income = advertising #+ parkingticket
+    
+    income = advertising+threeWCost*threeW+sevenWCost*sevenW+fiftyWCost*fiftyW
     return income
 

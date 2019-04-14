@@ -31,7 +31,7 @@ vnumber = carnumber + busnumber     # Number of vehicles
 """ Simulation related """
 starttime = datetime.datetime(2020,1,1,6,0,0)        # Selected date for simulation, start time of simulation
 endtime = datetime.datetime(2020,12,31,23,0)         # End time of simulation
-time_increment = 0.25                                # [hours]
+time_increment = 2                              # [hours]
 
 
 """ P&R operation related """
@@ -41,9 +41,10 @@ closetime = 23      # Closing time, hour
 
 """ Finance related """
 # Price of electricity, GPB per kWh
-red_energy_cost = (14 + 5.363)/100         # Base rate + DUOS charge           
-amber_energy_cost = (14 + 0.57)/100
-green_energy_cost = (14 + 0.452)/100
+base=14.7
+red_energy_cost = (base + 5.363)/100         # Base rate + DUOS charge           
+amber_energy_cost = (base + 0.57)/100
+green_energy_cost = (base + 0.452)/100
 
 
 """ PV related (Nicole's code)"""

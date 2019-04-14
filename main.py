@@ -15,7 +15,7 @@ import settings
 import showResults as sr
 
 from simulation import simulation
-from chargeRateBalance import chargeRateBalance
+from ChargeRateBalance import chargeRateBalance
 from datagen import datagen
 from gridEnergyCalculator import gridEnergyCalculator
 
@@ -59,9 +59,11 @@ while simulation.current_datetime < simulation.endtime:
     # Calculating distribution and buy from grid
     # =========================================================================
     evbatt = chargeRateBalance(evbatt, simulation, solar_profile)
+    for n in range (1, settings.vnumber + 1):
+        sr.total_sold_energy += evbatt["EV{0}".format(n)].chargerate * simulation.t_inc   
     
 #    for n in range (1, settings.vnumber + 1):
-#            evbatt["EV{0}".format(n)].gridpermission = 1
+#            evbatt["EV{0}".format(n)].grid_perm = 1
     
     evbatt = gridEnergyCalculator(evbatt, simulation)
     

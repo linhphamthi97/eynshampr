@@ -30,14 +30,13 @@ def npv(num_PVstructure,selling_electricityprice,staggerpart1,staggerpart2):
     maintenance = 1000 * num_PVstructure
     
     """ data for economy """
-    inflation_electricity=0.02
-    inflation_rpi=0.024
-    cost_of_borrowing=0.05 
-    discountpvwithtime=0.01
+    inflation_cpi=0.02
+    cost_of_borrowing=0.055
+    discountpvwithtime=0.02333
     
     
-    loan_interest=0.05
-    loan_duration=10
+    loan_interest=0.1
+    loan_duration=20
     #Preliminary
     buying_electricitycost=0.17
     cost_freight= 100
@@ -76,7 +75,7 @@ def npv(num_PVstructure,selling_electricityprice,staggerpart1,staggerpart2):
     discounted_yearly_net=[]
     accumulated_discount=[]
     for i in range(num_years+1):
-        discount.append(discountfactor(cost_of_borrowing,inflation_rpi,i))
+        discount.append(discountfactor(cost_of_borrowing,inflation_cpi,i))
         
         discounted_yearly_net.append(yearly_net[i]*discount[i])
         if i==0:
