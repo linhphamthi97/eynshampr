@@ -35,7 +35,7 @@ def gridEnergyCalculator(evbatt, simulation):
            and (evbatt["EV{0}".format(n)].SOC < settings.end_SOC_req) \
            and evbatt["EV{0}".format(n)].present == 1 \
            and evbatt["EV{0}".format(n)].grid_perm == 1:
-
+               
                # If the car needs the max charge rate or is a premium charging, then buy enough from the grid to provide max charge rate
                if evbatt["EV{0}".format(n)].need_maxcharge == 1 or evbatt["EV{0}".format(n)].premium:
                    extra_energy_needed = evbatt["EV{0}".format(n)].crlimit - evbatt["EV{0}".format(n)].chargerate
@@ -45,7 +45,7 @@ def gridEnergyCalculator(evbatt, simulation):
                else:
                    extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit) - evbatt["EV{0}".format(n)].chargerate
                    evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit)
-                 
+               
         #======================================================================
         # Categorizing the energy used into the time bands for finance applications
         #======================================================================

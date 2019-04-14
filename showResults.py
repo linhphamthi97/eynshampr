@@ -21,6 +21,8 @@ green_band_energy = 0
 pv_energy_available = 0
 grid_energy_needed_day = 0
 unused_pv_energy_day = 0
+total_sold_energy = 0
+total_PV_energy = 0
 
 SOC_before_plot = list()
 SOC_after_plot = list()
@@ -37,14 +39,10 @@ def showResults(evbatt, simulation):
     # Print energy balance values
     # =========================================================================
     # PV energy
-    if simulation.starttime_date == simulation.endtime_date:
-        pv_energy_profile = np.loadtxt('total_' + str(simulation.current_datetime.month) + '_kWh.txt')
-        total_daily_pv_energy = 0
-        for n in range (1,25):
-            total_daily_pv_energy += pv_energy_profile[n]
-        print('Total daily PV energy: ' , np.around(total_daily_pv_energy, decimals = 1), ' kWh')
-
+    print('Total PV energy available: ', np.around(total_PV_energy, decimals = 1), ' kWh')
+    print('Total PV energy sold: ' , np.around(total_sold_energy, decimals = 1), ' kWh')
     print('Total leftover energy from PV: ', np.around(np.clip(pv_leftover_energy, 0, None), decimals = 1), 'kWh')
+    
     
     # Grid energy
     print('')
@@ -54,6 +52,9 @@ def showResults(evbatt, simulation):
     print('Green band energy bought from the grid: ', np.around(green_band_energy, decimals = 1), ' kWh')
     print('')
     
+    # Total energy sold
+    print('Total energy sold: ', np.around(total_sold_energy + grid_energy_needed, decimals = 1), ' kWh')
+    print('')
     # Cost of energy
     energy_cost = red_band_energy * settings.red_energy_cost \
                     + amber_band_energy * settings.amber_energy_cost \

@@ -18,19 +18,19 @@ slowcharge_ulim = 3         # kW charging upper limit
 fastcharge_ulim = 7         # kW charging upper limit
 rapidcharge_ulim = 50       # kW charging upper limit
 
-end_SOC_req = 0.8           # The achievable SOC at leaving below which car is given charging priority
+end_SOC_req = 0.9           # The achievable SOC at leaving below which car is given charging priority
 priority_limit = 0.8        
 
 carnumber = 66              # cars/day
 
 buschargelength = 0.25      # hour of charging for 1 bus
-busnumber = 17              # bus / day, 17 corresponds to 1 bus/hour
+busnumber = 0              # bus / day, 17 corresponds to 1 bus/hour
 
 vnumber = carnumber + busnumber     # Number of vehicles
 
 """ Simulation related """
-starttime = datetime.datetime(2020,1,1,6,0,0)        # Selected date for simulation, start time of simulation
-endtime = datetime.datetime(2020,12,31,23,0)         # End time of simulation
+starttime = datetime.datetime(2020,1,10,6,0,0)        # Selected date for simulation, start time of simulation
+endtime = datetime.datetime(2020,1,10,23,0)         # End time of simulation
 time_increment = 0.25                                # [hours]
 
 

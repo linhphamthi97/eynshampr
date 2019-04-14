@@ -19,6 +19,8 @@ def chargeRateBalance (evbatt, simulation, solar_profile):
     
     pv_energy_available = pv_energy_profile[simulation.current_hour]
     
+    sr.total_PV_energy += pv_energy_available * simulation.t_inc
+    
     for n in range (1, settings.vnumber + 1):
         evbatt["EV{0}".format(n)].chargerate = 0
 
@@ -60,10 +62,11 @@ def chargeRateBalance (evbatt, simulation, solar_profile):
 
             
         if x <= settings.priority_limit * pv_energy_profile[simulation.current_hour]:
-            if evbatt["EV{0}".format(n)].present == 1 and evbatt["EV{0}".format(n)].need_maxcharge == 1\
-               and evbatt["EV{0}".format(n)].SOC < 1:
-                evbatt["EV{0}".format(n)].chargerate = evbatt["EV{0}".format(n)].crlimit
-                evbatt["EV{0}".format(n)].rel_weigh = 0
+            for n in range (1, settings.vnumber + 1):
+                if evbatt["EV{0}".format(n)].present == 1 and evbatt["EV{0}".format(n)].need_maxcharge == 1\
+                and evbatt["EV{0}".format(n)].SOC < 1:
+                    evbatt["EV{0}".format(n)].chargerate = evbatt["EV{0}".format(n)].crlimit
+                    evbatt["EV{0}".format(n)].rel_weigh = 0
             
         for n in range (1, settings.vnumber + 1):
             y += evbatt["EV{0}".format(n)].chargerate

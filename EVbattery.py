@@ -65,7 +65,7 @@ class EVbattery:
     # =========================================================================
     def charge(self, simulation):
         
-        self.fill = np.clip((self.fill - self.chargerate * simulation.t_inc), 0, self.capacity)
+        self.fill = np.clip(self.fill - (self.chargerate * simulation.t_inc), 0, self.capacity)
 #        self.SOC = (self.capacity - self.fill)/self.capacity   # This line is for debugging
         self.SOC = np.clip((self.capacity - self.fill) / self.capacity, 0, 1) # This is the real expression to use for final program
         
