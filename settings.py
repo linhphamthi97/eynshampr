@@ -10,10 +10,11 @@ initialized or tuned for the simulation
 import datetime
 from pvAsset import PVasset
 import numpy as np
-import sys
-import showResults as sr
+
 import random
-from EVbattery import EVbattery
+from simulation import simulation
+import warnings
+warnings.filterwarnings("ignore")
 # =============================================================================
 # Variables to change
 # =============================================================================
@@ -22,7 +23,7 @@ slowcharge_ulim = 3         # kW charging upper limit
 fastcharge_ulim = 7         # kW charging upper limit
 rapidcharge_ulim = 50       # kW charging upper limit
 
-end_SOC_req = 0.9           # The achievable SOC at leaving below which car is given charging priority
+end_SOC_req = 0.8           # The achievable SOC at leaving below which car is given charging priority
 priority_limit = 0.8        
 
 carnumber = 66              # cars/day
@@ -58,9 +59,9 @@ pv_area = 1.956 * 0.992   # Area of one panel
 # Variable parameters
 
 dt = 60/60              # Time period (hr)
-pv_efficiency =0.18    # Efficiency of one panel (max 0.18, degrades with time)
+pv_efficiency =0.18   # Efficiency of one panel (max 0.18, degrades with time)
 pv_losses = 0.14        # Losses from wires/inverters/etc; 0.14 recommended by PVGIS
-num_pv_bays=50
+num_pv_bays=100
 pv_number = num_pv_bays*15        # Total number of panels (max 4995, given 15 panels per 3-bay unit, 1000 bays total) 
 
 # Generating an instance 
@@ -69,11 +70,32 @@ pv_capacity = pv_efficiency * pv_area #at max efficiency this is 0.35kW as manuf
 pv_site1 = PVasset(pv_capacity * pv_number * (1 - pv_losses))
 
 
+#Initialise variables
+grid_energy_needed = 0
+pv_leftover_energy = 0
+red_band_energy = 0
+amber_band_energy = 0
+green_band_energy = 0
+pv_energy_available = 0
+grid_energy_needed_day = 0
+unused_pv_energy_day = 0
+total_sold_energy = 0
+total_PV_energy = 0
+
+SOC_before_plot = list()
+SOC_after_plot = list()
+x_axis = list()     # An x axis containing the timestamps of the simulation
+longs_x_axis = list() # An x axis containing the days for long simulations
+grid_energy = list()
+unused_pv_energy = list()
+daily_grid_energy = list()
+daily_unused_pv_energy = list()
 
 
 #///////////////////////////////////////////////////////////////////
 #from ChargeRateBalance.py
 def chargeRateBalance (evbatt, simulation, solar_profile):
+    global pv_leftover_energy
     # =========================================================================
     # Initialising variables
     # =========================================================================
@@ -141,7 +163,7 @@ def chargeRateBalance (evbatt, simulation, solar_profile):
         # =====================================================================         
         if total_weigh == 0 :
             # Integrate leftover PV energy during the day by using trapezoidal rule
-            sr.pv_leftover_energy += pv_energy_available * simulation.t_inc 
+            pv_leftover_energy += pv_energy_available * simulation.t_inc 
 
             pv_energy_available = pv_energy_profile[simulation.current_hour]
             for n in range (1, vnumber + 1):
@@ -170,15 +192,7 @@ def chargeRateBalance (evbatt, simulation, solar_profile):
         
         pv_energy_available = pv_energy_profile[simulation.current_hour] - total_chargerate
         
-        # For debugging
-        if pv_energy_available < -0.01:  # Ideally zero, but it sometimes goes negative by a very small amount (order of e-15) due to rounding errors
-            print('PLease run the simulation again. BUG')
-            sys.exit()
  
-    # For plotting unused PV energy
-    sr.unused_pv_energy.append(pv_energy_available)
-    sr.unused_pv_energy_day += pv_energy_available
-       
     return evbatt
 
 def datagen(simulation):
@@ -372,6 +386,7 @@ class EVbattery:
             self.grid_perm = 0
 
 def gridEnergyCalculator(evbatt, simulation):
+    global grid_energy_needed,grid_energy_needed_day,red_band_energy,amber_band_energy,green_band_energy
     total_extra_energy_needed = 0
     
     for n in range (1, vnumber + 1):
@@ -408,30 +423,104 @@ def gridEnergyCalculator(evbatt, simulation):
         # Categorizing the energy used into the time bands for finance applications
         #======================================================================
         # Summing up total energy bought from the grid
-        sr.grid_energy_needed += extra_energy_needed * simulation.t_inc     # Goes towards total energy bought during the simulation
-        sr.grid_energy_needed_day += extra_energy_needed * simulation.t_inc # Goes towards total energy bought during the day
+        grid_energy_needed += extra_energy_needed * simulation.t_inc     # Goes towards total energy bought during the simulation
+        grid_energy_needed_day += extra_energy_needed * simulation.t_inc # Goes towards total energy bought during the day
         total_extra_energy_needed += extra_energy_needed                    # Goes towards total energy bought during that time instant, mainly for visualising
         
         # Weekday
         if simulation.current_date.weekday() < 5:
             if simulation.current_time >= datetime.time(16,0) and simulation.current_time < datetime.time(19,0):
-                sr.red_band_energy += extra_energy_needed * simulation.t_inc
+                red_band_energy += extra_energy_needed * simulation.t_inc
             elif (simulation.current_time >= datetime.time(7,0) and simulation.current_time < datetime.time(16,0)) \
                  or\
                  (simulation.current_time >= datetime.time(19,0) and simulation.current_time < datetime.time(23,0)):
-                     sr.amber_band_energy += extra_energy_needed * simulation.t_inc
+                     amber_band_energy += extra_energy_needed * simulation.t_inc
             elif (simulation.current_time >= datetime.time(0,0) and simulation.current_time < datetime.time(7,0)) \
                  or\
                  simulation.current_time >= datetime.time(23,0):
-                     sr.green_band_energy += extra_energy_needed * simulation.t_inc
+                     green_band_energy += extra_energy_needed * simulation.t_inc
         
         # Weekend
         else: 
-            sr.green_band_energy += extra_energy_needed * simulation.t_inc
+            green_band_energy += extra_energy_needed * simulation.t_inc
     
     #==========================================================================
     # For plotting
     #==========================================================================
-    sr.grid_energy.append(total_extra_energy_needed)
+    grid_energy.append(total_extra_energy_needed)
                      
     return evbatt
+
+
+    
+#=============================================================================
+# Set up simulation and PV
+# =============================================================================
+simulation = simulation(starttime, endtime, time_increment)
+solar_profile = pv_site1.getOutput(dt)
+    
+# =============================================================================
+# Simulation
+# =============================================================================
+
+while simulation.current_datetime < simulation.endtime:
+    # =========================================================================
+    # Generate a new set of data for every new day, add totals of last day to results
+    # =========================================================================
+    if simulation.current_date != simulation.last_date:
+        evbatt, total_ev_demand, total_inst_chargerate = datagen(simulation)
+        
+        for n in range (1, vnumber + 1):
+            evbatt["EV{0}".format(n)].statusUpdate(simulation)
+        
+
+        # Picks the range for solar profile corresponding to the day
+        simulation.rangepick()
+        
+
+    # =========================================================================
+    # Calculating distribution and buy from grid
+    # =========================================================================
+    evbatt = chargeRateBalance(evbatt, simulation, solar_profile)
+    for n in range (1, vnumber + 1):
+        total_sold_energy += evbatt["EV{0}".format(n)].chargerate * simulation.t_inc   
+    
+#    for n in range (1, vnumber + 1):
+#            evbatt["EV{0}".format(n)].grid_perm = 1
+    
+    evbatt = gridEnergyCalculator(evbatt, simulation)
+    
+    # =========================================================================
+    # Charging
+    # =========================================================================
+    for n in range (1, vnumber + 1):
+        evbatt["EV{0}".format(n)].charge(simulation)
+    
+    # =========================================================================
+    # Incrementing time
+    # =========================================================================
+    simulation.timeUpdate()
+    
+    for n in range (1, vnumber + 1):    
+        evbatt["EV{0}".format(n)].statusUpdate(simulation)
+    
+
+# =============================================================================
+# Show results of the simulation in tuple 0.total electricity sold 1.cost of buying from grid
+# =============================================================================
+def showResults(evbatt, simulation):  
+    
+    # =========================================================================
+    # Print energy balance values
+    # =========================================================================
+    # Cost of energy
+    energy_cost = red_band_energy * red_energy_cost \
+                    + amber_band_energy * amber_energy_cost \
+                    + green_band_energy * green_energy_cost
+                    
+    showResults=[int(np.around(total_sold_energy + grid_energy_needed)),int(energy_cost)]
+    return showResults
+
+
+print(showResults(evbatt, simulation)[0])
+print(showResults(evbatt, simulation)[1])
