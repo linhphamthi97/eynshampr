@@ -13,18 +13,19 @@ warnings.filterwarnings("ignore")
 
 
 import settings 
-import datetime
+
 
 import showResults as sr
 
 from simulation import simulation
 from settings import chargeRateBalance
-from datagen import datagen
-from gridEnergyCalculator import gridEnergyCalculator
+from settings import datagen
+from settings import gridEnergyCalculator
+
 #==============================================================================
 #change variables in settings
 #==============================================================================
-
+settings.py
 
 # =============================================================================
 # Set up simulation and PV

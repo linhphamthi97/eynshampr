@@ -13,7 +13,8 @@ from pvAsset import PVasset
 import numpy as np
 import sys
 import showResults as sr
-
+import random
+from EVbattery import EVbattery
 # =============================================================================
 # Variables to change
 # =============================================================================
@@ -179,4 +180,259 @@ def chargeRateBalance (evbatt, simulation, solar_profile):
     sr.unused_pv_energy.append(pv_energy_available)
     sr.unused_pv_energy_day += pv_energy_available
        
+    return evbatt
+
+def datagen(simulation):
+    # Initializing variables
+    evbatt = {}
+    total_ev_demand = 0         # Total number of kWh of the batteries that need to 
+                                # be filled
+    total_inst_chargerate = 0   # The number of kW needed at the moment that - if
+                                # sustained constantly, will change the cars fully
+                                # by the time they leaves                       
+    n = 1                       # extract one random sample from normal mixture distribution to give arrival time
+    mu = [9, 17]                # means for arrival time
+    sigma = [0.1,2.1]           # standard deviations for arrival time
+
+    
+    # Creating instances of the EV battery class
+    for n in range(1,(carnumber + busnumber + 1)):
+
+        # CAR instances
+        Z = np.random.choice([0,1]) # latent variable
+        if n <= carnumber:
+                                                # Battery capacity        
+            evbatt["EV{0}".format(n)]=EVbattery(np.random.gamma(5.66,7),\
+                                                # State of charge
+                                                np.clip(np.random.beta(2,1.7), 0, 1),\
+                                                # Premium charging?
+                                                random.choices([0, 1], weights = [95, 5], k = 1), \
+                                                # Type of charging, 0 for slow, 1 for fast
+                                                random.randint(0,1),\
+                                                # Length of stay in hours
+                                                np.random.normal(10,2.1),\
+                                                # Time of arrival, year, month, day set in settings, hour and minute randomized
+                                                datetime.datetime(simulation.current_datetime.year,simulation.current_datetime.month,\
+                                                                  simulation.current_datetime.day,\
+                                                                  int(np.clip(float(np.random.normal(mu[Z], sigma[Z], 1)),6,23)), \
+                                                                  random.randint(0,59)))
+        # BUS instances
+        else: 
+                                                # Battery capacity        
+            evbatt["EV{0}".format(n)]=EVbattery(320,\
+                                                # State of charge
+                                                np.clip(random.gauss(0.5,0.15), 0, None),\
+                                                # Premium charging?
+                                                0, \
+                                                # Type of charging, 0 for slow, 1 for fast
+                                                2,\
+                                                # Length of stay in hours
+                                                buschargelength,\
+                                                # Time of arrival, year, month, day set in settings, hour and minute randomized
+                                                datetime.datetime(simulation.current_datetime.year,simulation.current_datetime.month,\
+                                                                  simulation.current_datetime.day,5,0) + \
+                                                                  datetime.timedelta (hours = (closetime - opentime) / busnumber) * (n - carnumber))
+
+            total_ev_demand = total_ev_demand + evbatt["EV{0}".format(n)].fill
+            total_inst_chargerate = total_inst_chargerate + evbatt["EV{0}".format(n)].avg_chargerate
+    
+    return evbatt, total_ev_demand, total_inst_chargerate
+
+class EVbattery:
+    
+    # =========================================================================
+    # Initialising variables
+    # =========================================================================
+    def __init__(self, capacity, SOC, premium, chargetype, time, arrivaltime):
+
+        # =====================================================================
+        # Charging related
+        # =====================================================================
+        self.capacity = capacity  # kWh
+        self.SOC = SOC  # proportion charged when arriving in P+R
+        self.fill = self.capacity - self.capacity * self.SOC # kWh needed to completely fill battery
+        self.chargetype = chargetype    # Type of charging (slow=0, fast=1, rapid=2)
+        self.premium = premium          # Premium charging, i.e car is guaranteed to charge to 100% is physically possible
+        
+            # Charging rate limit
+        if self.chargetype == 0:
+            self.crlimit = slowcharge_ulim
+        elif self.chargetype == 1:
+            self.crlimit = fastcharge_ulim
+        else:
+            self.crlimit = rapidcharge_ulim
+
+        # =====================================================================
+        # Time related
+        # =====================================================================
+        self.time = time # length of time car will be parked in hours (driver inputs on arrival)
+        self.arrivaltime = arrivaltime # When the car arrives in the day
+        self.leavetime = arrivaltime + datetime.timedelta(hours = self.time)
+        self.present = 0    # If a car is present in the parking lot at a particular time
+        
+        # =====================================================================
+        # For the algorithm's use
+        # =====================================================================
+        self.avg_chargerate = self.fill / self.time
+
+        self.grid_perm = 0          # If this value is 1, then the car has 'permission' to buy energy from the grid to charge
+                                    # If this value is 0, then the car cannot demand extra energy from the grid
+
+        # Minimum charge duration for leaving SOC to hit the requirement (80%)
+        if self.premium == 0:
+            self.min_charge_dur = datetime.timedelta(hours = (end_SOC_req - self.SOC)*self.capacity / self.crlimit)
+        else:
+            self.min_charge_dur = datetime.timedelta(hours = (1 - self.SOC) * self.capacity / self.crlimit)
+
+        # Needs the maximum chargerate at all times when present?
+        if self.time * self.crlimit <= (end_SOC_req - self.SOC)*self.capacity:
+            self.need_maxcharge = 1
+        else: 
+            self.need_maxcharge = 0
+        
+    # =========================================================================
+    # This function charges the car by updating the relevant parameters
+    # =========================================================================
+    def charge(self, simulation):
+        
+        self.fill = np.clip((self.fill - self.chargerate * simulation.t_inc), 0, self.capacity)
+#        self.SOC = (self.capacity - self.fill)/self.capacity   # This line is for debugging
+        self.SOC = np.clip((self.capacity - self.fill) / self.capacity, 0, 1) # This is the real expression to use for final program
+        
+        self.avg_chargerate = np.clip(self.fill / ((self.leavetime - simulation.current_datetime).total_seconds()/3600) , 0 , None)
+
+
+    # =========================================================================
+    # This function updates the car's status
+    # =========================================================================
+    def statusUpdate(self, simulation):
+        
+        # Present at the site or not
+        if (self.arrivaltime <= simulation.current_datetime) and (simulation.current_datetime < self.leavetime):
+            self.present = 1
+        else:
+            self.present = 0     
+
+        # =====================================================================
+        # Grid energy permission
+        # =====================================================================     
+        # If the car is not present then no grid energy demand
+        if self.present == 0 :
+            self.grid_perm = 0
+
+        # If the car is present and need the maxinum chargerate or is a bus, then allow grid energy demand
+        elif self.need_maxcharge == 1 or self.chargetype == 2:
+            self.grid_perm = 1
+            
+        # If the car leaves before 7am then allow grid energy demand
+        elif self.present == 1 and \
+             datetime.time(self.leavetime.hour, self.leavetime.minute) <= datetime.time(7,0):
+                 self.grid_perm = 1
+
+        # If the car leaves between 7am and  4pm or it is the weekend, then only allow charging at (leavetime - min_charge_dur)
+        elif datetime.time(self.leavetime.hour, self.leavetime.minute) <= datetime.time(16,0) or \
+             simulation.current_date.weekday() > 4:
+            if simulation.current_datetime >= (self.leavetime - self.min_charge_dur):
+                self.grid_perm = 1
+            else:
+                self.grid_perm = 0
+
+
+        # If the car leaves between 4pm and 7pm, then only allow charging at (4pm - min_chare_dur)
+        elif datetime.time(self.leavetime.hour, self.leavetime.minute) <= datetime.time(19,0):
+            if simulation.current_datetime >= datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 16,0) - self.min_charge_dur:
+
+                # No charging in the red band time           
+                if simulation.current_datetime > datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 16,0) and \
+                    simulation.current_datetime < datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 19,0):
+                        self.grid_perm = 0
+                else: 
+                    self.grid_perm = 1
+            else:
+                self.grid_perm = 0
+                
+        # If the car leaves after 7pm, then only allow charging at (leavetime - min_charge_dur - 3 hours) to avoid red band zone
+        elif datetime.time(self.leavetime.hour, self.leavetime.minute) >= datetime.time(19,0):
+            if simulation.current_datetime >= self.leavetime - self.min_charge_dur - datetime.timedelta (hours = 3):
+
+                # No charging in the red band time           
+                if simulation.current_datetime > datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 16,0) and \
+                    simulation.current_datetime < datetime.datetime(simulation.current_datetime.year, simulation.current_datetime.month, \
+                                                simulation.current_datetime.day, 19,0):
+                        self.grid_perm = 0
+                else: 
+                    self.grid_perm = 1
+            else:
+                self.grid_perm = 0
+
+        else: 
+            self.grid_perm = 0
+
+def gridEnergyCalculator(evbatt, simulation):
+    total_extra_energy_needed = 0
+    
+    for n in range (1, vnumber + 1):
+        
+        #======================================================================
+        # Picking out the EVs that after the energy division are charging at a 
+        # sub-optimal rate (less than the average charging rate) and buying in
+        # energy from the grid to match that average charging rate.
+        #
+        # Conditions to buy from the grid:
+        #   - charging rate less than it's charging limit
+        #   - SOC less than 0.8, i.e our goal for the leaving SOC
+        #   - the EV is present at the site
+        #   - permission to buy from the grid
+        #======================================================================      
+        extra_energy_needed = 0
+        
+        if (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit)) \
+           and (evbatt["EV{0}".format(n)].SOC < end_SOC_req) \
+           and evbatt["EV{0}".format(n)].present == 1 \
+           and evbatt["EV{0}".format(n)].grid_perm == 1:
+
+               # If the car needs the max charge rate or is a premium charging, then buy enough from the grid to provide max charge rate
+               if evbatt["EV{0}".format(n)].need_maxcharge == 1 or evbatt["EV{0}".format(n)].premium:
+                   extra_energy_needed = evbatt["EV{0}".format(n)].crlimit - evbatt["EV{0}".format(n)].chargerate
+                   evbatt["EV{0}".format(n)].chargerate = evbatt["EV{0}".format(n)].crlimit                   
+
+               # Otherwise, buy enough to provide the average charge rate
+               else:
+                   extra_energy_needed = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit) - evbatt["EV{0}".format(n)].chargerate
+                   evbatt["EV{0}".format(n)].chargerate = np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit)
+                 
+        #======================================================================
+        # Categorizing the energy used into the time bands for finance applications
+        #======================================================================
+        # Summing up total energy bought from the grid
+        sr.grid_energy_needed += extra_energy_needed * simulation.t_inc     # Goes towards total energy bought during the simulation
+        sr.grid_energy_needed_day += extra_energy_needed * simulation.t_inc # Goes towards total energy bought during the day
+        total_extra_energy_needed += extra_energy_needed                    # Goes towards total energy bought during that time instant, mainly for visualising
+        
+        # Weekday
+        if simulation.current_date.weekday() < 5:
+            if simulation.current_time >= datetime.time(16,0) and simulation.current_time < datetime.time(19,0):
+                sr.red_band_energy += extra_energy_needed * simulation.t_inc
+            elif (simulation.current_time >= datetime.time(7,0) and simulation.current_time < datetime.time(16,0)) \
+                 or\
+                 (simulation.current_time >= datetime.time(19,0) and simulation.current_time < datetime.time(23,0)):
+                     sr.amber_band_energy += extra_energy_needed * simulation.t_inc
+            elif (simulation.current_time >= datetime.time(0,0) and simulation.current_time < datetime.time(7,0)) \
+                 or\
+                 simulation.current_time >= datetime.time(23,0):
+                     sr.green_band_energy += extra_energy_needed * simulation.t_inc
+        
+        # Weekend
+        else: 
+            sr.green_band_energy += extra_energy_needed * simulation.t_inc
+    
+    #==========================================================================
+    # For plotting
+    #==========================================================================
+    sr.grid_energy.append(total_extra_energy_needed)
+                     
     return evbatt

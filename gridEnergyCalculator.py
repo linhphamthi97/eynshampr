@@ -16,7 +16,7 @@ import showResults as sr
 def gridEnergyCalculator(evbatt, simulation):
     total_extra_energy_needed = 0
     
-    for n in range (1, settings.vnumber + 1):
+    for n in range (1, vnumber + 1):
         
         #======================================================================
         # Picking out the EVs that after the energy division are charging at a 
@@ -32,7 +32,7 @@ def gridEnergyCalculator(evbatt, simulation):
         extra_energy_needed = 0
         
         if (evbatt["EV{0}".format(n)].chargerate < np.clip(evbatt["EV{0}".format(n)].avg_chargerate,0,evbatt["EV{0}".format(n)].crlimit)) \
-           and (evbatt["EV{0}".format(n)].SOC < settings.end_SOC_req) \
+           and (evbatt["EV{0}".format(n)].SOC < end_SOC_req) \
            and evbatt["EV{0}".format(n)].present == 1 \
            and evbatt["EV{0}".format(n)].grid_perm == 1:
 

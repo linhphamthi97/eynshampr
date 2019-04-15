@@ -26,11 +26,11 @@ class EVbattery:
         
             # Charging rate limit
         if self.chargetype == 0:
-            self.crlimit = settings.slowcharge_ulim
+            self.crlimit = slowcharge_ulim
         elif self.chargetype == 1:
-            self.crlimit = settings.fastcharge_ulim
+            self.crlimit = fastcharge_ulim
         else:
-            self.crlimit = settings.rapidcharge_ulim
+            self.crlimit = rapidcharge_ulim
 
         # =====================================================================
         # Time related
@@ -50,12 +50,12 @@ class EVbattery:
 
         # Minimum charge duration for leaving SOC to hit the requirement (80%)
         if self.premium == 0:
-            self.min_charge_dur = datetime.timedelta(hours = (settings.end_SOC_req - self.SOC)*self.capacity / self.crlimit)
+            self.min_charge_dur = datetime.timedelta(hours = (end_SOC_req - self.SOC)*self.capacity / self.crlimit)
         else:
             self.min_charge_dur = datetime.timedelta(hours = (1 - self.SOC) * self.capacity / self.crlimit)
 
         # Needs the maximum chargerate at all times when present?
-        if self.time * self.crlimit <= (settings.end_SOC_req - self.SOC)*self.capacity:
+        if self.time * self.crlimit <= (end_SOC_req - self.SOC)*self.capacity:
             self.need_maxcharge = 1
         else: 
             self.need_maxcharge = 0
