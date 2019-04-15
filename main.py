@@ -18,6 +18,12 @@ from simulation import simulation
 from ChargeRateBalance import chargeRateBalance
 from datagen import datagen
 from gridEnergyCalculator import gridEnergyCalculator
+#==============================================================================
+#change variables in settings
+#==============================================================================
+pv_efficiency=0.18
+
+
 
 # =============================================================================
 # Set up simulation and PV
@@ -39,22 +45,11 @@ while simulation.current_datetime < simulation.endtime:
         for n in range (1, settings.vnumber + 1):
             evbatt["EV{0}".format(n)].statusUpdate(simulation)
         
-            # For plotting
-            sr.SOC_before_plot.append(evbatt["EV{0}".format(n)].SOC * 100)
-            
+
         # Picks the range for solar profile corresponding to the day
         simulation.rangepick()
         
-        # For plotting
-        sr.longs_x_axis.append(simulation.current_date)
-        sr.daily_grid_energy.append(sr.grid_energy_needed_day)
-        sr.grid_energy_needed_day = 0
-        sr.daily_unused_pv_energy.append(sr.unused_pv_energy_day)
-        sr.unused_pv_energy_day = 0
-        
-    # For plotting
-    sr.x_axis.append(simulation.current_datetime)
-    
+
     # =========================================================================
     # Calculating distribution and buy from grid
     # =========================================================================
@@ -83,10 +78,9 @@ while simulation.current_datetime < simulation.endtime:
     
 
 # =============================================================================
-# Show results of the simulation
+# Show results of the simulation in tuple 0.total electricity sold 1.cost of buying from grid
 # =============================================================================
-sr.longs_x_axis.append(simulation.current_date)
-sr.daily_grid_energy.append(sr.grid_energy_needed_day)
-sr.daily_unused_pv_energy.append(sr.unused_pv_energy_day)
 
-sr.showResults(evbatt, simulation)
+
+print(sr.showResults(evbatt, simulation)[0])
+print(sr.showResults(evbatt, simulation)[1])

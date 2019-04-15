@@ -31,7 +31,7 @@ vnumber = carnumber + busnumber     # Number of vehicles
 """ Simulation related """
 starttime = datetime.datetime(2020,1,1,6,0,0)        # Selected date for simulation, start time of simulation
 endtime = datetime.datetime(2020,12,31,23,0)         # End time of simulation
-time_increment = 2                              # [hours]
+time_increment = 24                              # [hours]
 
 
 """ P&R operation related """
@@ -52,10 +52,12 @@ green_energy_cost = (base + 0.452)/100
 pv_area = 1.956 * 0.992   # Area of one panel        
  
 # Variable parameters
+
 dt = 60/60              # Time period (hr)
-pv_efficiency = 0.18    # Efficiency of one panel (max 0.18, degrades with time)
+pv_efficiency = 1    # Efficiency of one panel (max 0.18, degrades with time)
 pv_losses = 0.14        # Losses from wires/inverters/etc; 0.14 recommended by PVGIS
-pv_number = 4995        # Total number of panels (max 4995, given 15 panels per 3-bay unit, 1000 bays total) 
+num_pv_bays=10
+pv_number = num_pv_bays*15        # Total number of panels (max 4995, given 15 panels per 3-bay unit, 1000 bays total) 
 
 # Generating an instance 
 pv_capacity = pv_efficiency * pv_area #at max efficiency this is 0.35kW as manufacturer states
