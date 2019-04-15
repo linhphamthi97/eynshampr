@@ -12,7 +12,7 @@ from pvAsset import PVasset
 import numpy as np
 
 import random
-from simulation import simulation
+from simulation import Simulation
 import warnings
 warnings.filterwarnings("ignore")
 # =============================================================================
@@ -444,11 +444,7 @@ def gridEnergyCalculator(evbatt, simulation):
         else: 
             green_band_energy += extra_energy_needed * simulation.t_inc
     
-    #==========================================================================
-    # For plotting
-    #==========================================================================
-    grid_energy.append(total_extra_energy_needed)
-                     
+
     return evbatt
 
 
@@ -456,7 +452,7 @@ def gridEnergyCalculator(evbatt, simulation):
 #=============================================================================
 # Set up simulation and PV
 # =============================================================================
-simulation = simulation(starttime, endtime, time_increment)
+simulation = Simulation(starttime, endtime, time_increment)
 solar_profile = pv_site1.getOutput(dt)
     
 # =============================================================================

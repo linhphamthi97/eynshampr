@@ -11,7 +11,7 @@ import calendar
 # Variables
 # =============================================================================
 
-class simulation:
+class Simulation:
     def __init__(self,starttime, endtime, t_inc):
         self.starttime = starttime
         self.starttime_date = datetime.date(self.starttime.year, self.starttime.month, self.starttime.day)
