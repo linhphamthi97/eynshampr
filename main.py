@@ -11,7 +11,10 @@ author: Linh Pham Thi
 import warnings
 warnings.filterwarnings("ignore")
 
+
 import settings 
+
+
 import showResults as sr
 
 from simulation import simulation
@@ -21,8 +24,6 @@ from gridEnergyCalculator import gridEnergyCalculator
 #==============================================================================
 #change variables in settings
 #==============================================================================
-pv_efficiency=0.18
-
 
 
 # =============================================================================

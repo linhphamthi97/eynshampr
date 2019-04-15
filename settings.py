@@ -7,6 +7,7 @@ Created on Sun Feb 10 22:46:08 2019
 This file contains all the global variables and all variables that need to be
 initialized or tuned for the simulation
 """
+from __main__ import *
 import datetime
 from pvAsset import PVasset
 
@@ -41,7 +42,7 @@ closetime = 23      # Closing time, hour
 
 """ Finance related """
 # Price of electricity, GPB per kWh
-base=14.7
+base=0.147
 red_energy_cost = (base + 5.363)/100         # Base rate + DUOS charge           
 amber_energy_cost = (base + 0.57)/100
 green_energy_cost = (base + 0.452)/100
@@ -54,7 +55,7 @@ pv_area = 1.956 * 0.992   # Area of one panel
 # Variable parameters
 
 dt = 60/60              # Time period (hr)
-pv_efficiency = 1    # Efficiency of one panel (max 0.18, degrades with time)
+pv_efficiency = 0.17    # Efficiency of one panel (max 0.18, degrades with time)
 pv_losses = 0.14        # Losses from wires/inverters/etc; 0.14 recommended by PVGIS
 num_pv_bays=10
 pv_number = num_pv_bays*15        # Total number of panels (max 4995, given 15 panels per 3-bay unit, 1000 bays total) 
