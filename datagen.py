@@ -26,11 +26,11 @@ def datagen(simulation):
 
     
     # Creating instances of the EV battery class
-    for n in range(1,(carnumber + busnumber + 1)):
+    for n in range(1,(settings.carnumber + settings.busnumber + 1)):
 
         # CAR instances
         Z = np.random.choice([0,1]) # latent variable
-        if n <= carnumber:
+        if n <= settings.carnumber:
                                                 # Battery capacity        
             evbatt["EV{0}".format(n)]=EVbattery(np.random.gamma(5.66,7),\
                                                 # State of charge
@@ -57,11 +57,11 @@ def datagen(simulation):
                                                 # Type of charging, 0 for slow, 1 for fast
                                                 2,\
                                                 # Length of stay in hours
-                                                buschargelength,\
+                                                settings.buschargelength,\
                                                 # Time of arrival, year, month, day set in settings, hour and minute randomized
                                                 datetime.datetime(simulation.current_datetime.year,simulation.current_datetime.month,\
                                                                   simulation.current_datetime.day,5,0) + \
-                                                                  datetime.timedelta (hours = (closetime - opentime) / busnumber) * (n - carnumber))
+                                                                  datetime.timedelta (hours = (settings.closetime - settings.opentime) / settings.busnumber) * (n - settings.carnumber))
 
             total_ev_demand = total_ev_demand + evbatt["EV{0}".format(n)].fill
             total_inst_chargerate = total_inst_chargerate + evbatt["EV{0}".format(n)].avg_chargerate

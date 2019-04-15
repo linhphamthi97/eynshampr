@@ -9,6 +9,7 @@ This file is a function to show results, plot graphs
 import numpy as np
 import settings
 
+
 #Initialise variables
 grid_energy_needed = 0
 pv_leftover_energy = 0
@@ -35,22 +36,11 @@ def showResults(evbatt, simulation):
     # =========================================================================
     # Print energy balance values
     # =========================================================================
-
-
     # Cost of energy
     energy_cost = red_band_energy * settings.red_energy_cost \
                     + amber_band_energy * settings.amber_energy_cost \
                     + green_band_energy * settings.green_energy_cost
-   
+                    
+    showResults=[int(np.around(total_sold_energy + grid_energy_needed)),int(energy_cost)]
+    return showResults
     
-    return (np.around(total_sold_energy + grid_energy_needed, decimals = 1), int(energy_cost))
-    
-    
-
-
-    
-
-
-    
-
-

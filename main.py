@@ -16,7 +16,7 @@ import settings
 
 
 import showResults as sr
-
+from itertools import chain
 from simulation import simulation
 from settings import chargeRateBalance
 from settings import datagen
@@ -25,7 +25,7 @@ from settings import gridEnergyCalculator
 #==============================================================================
 #change variables in settings
 #==============================================================================
-settings.py
+settings.pv_efficiency=1
 
 # =============================================================================
 # Set up simulation and PV
