@@ -12,13 +12,13 @@ def structurecost(num_bays):
     costlabour=49.51+16.26
     temporarysite=costlabour*0.1
     installation=83.84
-    
+    lighting=418.80/3
     #cost for solar power system per additional bay
     additionalsystem=1555.09
     #cost for solar power system for whole plant
     wholeplant=804.42
     
-    structurecost= (materials+installation+temporarysite+additionalsystem)*num_bays+wholeplant
+    structurecost= (materials+installation+temporarysite+additionalsystem+lighting)*num_bays+wholeplant
     return structurecost
 
 

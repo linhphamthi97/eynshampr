@@ -13,12 +13,12 @@ warnings.filterwarnings("ignore")
 
 
 import settings 
-
+import datetime
 
 import showResults as sr
 
 from simulation import simulation
-from ChargeRateBalance import chargeRateBalance
+from settings import chargeRateBalance
 from datagen import datagen
 from gridEnergyCalculator import gridEnergyCalculator
 #==============================================================================
