@@ -73,8 +73,8 @@ unused_pv_energy = list()
 daily_grid_energy = list()
 daily_unused_pv_energy = list()
 
-def variable(eff,bays):
-    global pv_site1,pv_capacity,pv_number,daily_unused_pv_energy,daily_grid_energy,unused_pv_energy,grid_energy,longs_x_axis,x_axis,SOC_after_plot,num_pv_bays,pv_efficiency, grid_energy_needed,pv_leftover_energy,pv_leftover_energy,red_band_energy,amber_band_energy,green_band_energy,pv_energy_available,grid_energy_needed_day,unused_pv_energy_day,total_sold_energy,total_PV_energy,SOC_before_plot
+def variable(eff,bays,dt):
+    global time_increment,pv_site1,pv_capacity,pv_number,daily_unused_pv_energy,daily_grid_energy,unused_pv_energy,grid_energy,longs_x_axis,x_axis,SOC_after_plot,num_pv_bays,pv_efficiency, grid_energy_needed,pv_leftover_energy,pv_leftover_energy,red_band_energy,amber_band_energy,green_band_energy,pv_energy_available,grid_energy_needed_day,unused_pv_energy_day,total_sold_energy,total_PV_energy,SOC_before_plot
 
     pv_efficiency=eff
     num_pv_bays=bays
@@ -82,7 +82,7 @@ def variable(eff,bays):
     # Generating an instance 
     pv_capacity = pv_efficiency * pv_area #at max efficiency this is 0.35kW as manufacturer states
     pv_site1 = PVasset(pv_capacity * pv_number * (1 - pv_losses))
-    
+    time_increment = dt
     grid_energy_needed = 0
     pv_leftover_energy = 0
     red_band_energy = 0

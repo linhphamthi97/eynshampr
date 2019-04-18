@@ -4,27 +4,25 @@ Created on Sun Feb 10 21:10:31 2019
 
 @author: neilw
 """
-#import numpy as np
+import numpy as np
 #import matplotlib.pyplot as plt
 #import pandas as pd
-from energydemand import energydemand
 from discountfactor import discountfactor
-from energydeficit import energydeficit
 from income import income
-from itertools import chain
-from panelstructurecost import structurecost
+from initialinvest import initial
 from loanrepayment import fixedloanrepayment
-from operator import add
 import main
+from maintain import annualmaintain
+from replacement import replace
 
-lifespan=10
-eff_decfirst=0.965
-0.993125
-18.07
-100
-
+#lifespan=10
+#eff_decfirst=0.965
+#eff_dec=0.993125
+#start_eff=0.1807
+#bays=100
+#dt=0.25
 # 10 year lifespan of solar pv
-def listsellbuy(lifespan,eff_decfirst,eff_dec,start_eff,bays):
+def listsellbuy(lifespan,eff_decfirst,eff_dec,start_eff,bays,dt):
     lifespan = lifespan
     start_eff= start_eff
     eff_dec=eff_dec
@@ -38,15 +36,15 @@ def listsellbuy(lifespan,eff_decfirst,eff_dec,start_eff,bays):
             eff=eff*eff_dec**i
         if listsellbuy==None or listsellbuy=="": 
             pass
-        main.variable(eff,bays)
+        main.variable(eff,bays,dt)
         listsellbuy.append(main.results())
         
         i+=1
     
-    print(listsellbuy*3)
+  
     return listsellbuy*3
     
-def npv(num_PVstructure,selling_electricityprice,staggerpart1,staggerpart2):
+def npv(num_bays,selling_electricityprice,dt):
 
     num_years = 30
     
@@ -68,34 +66,55 @@ def npv(num_PVstructure,selling_electricityprice,staggerpart1,staggerpart2):
     
     #buying and selling electricity
     #assuming same every year(no change in number of EVs)
+    sellbuy=listsellbuy(10,0.965,0.993125,0.1807,100,dt)
     cost_elec_buy=[]
     cost_elec_sell=[]
     """yearly net cost sell - cost buy - loan repayment (- maintenance) etc."""
     yearly_net=[]
     
+
+    initialinvest=initial(num_bays)
+    
+    loan=int(initialinvest)
+    #loan repayment, first parameter is loan value, this will be changed iteratively so that npv never falls below zero for any year
+    repayment= fixedloanrepayment(loan,loan_interest,loan_duration)+[0]*(num_years-loan_duration)
+#replacements
+    #hardcoded for 30 years
+    replacelist=[0]*9+[replace(num_bays)]
+    replacelist= [0]+replacelist*3
+
+    #replacement with discounting
+    pvdisc=[]
+    disc_replacelist=[]
+    for i in range(num_years):
+        pvdisc.append((1-discountpvwithtime)**(i))
+       
+        disc_replacelist.append(replacelist[i]*pvdisc[i])
+    
+    print("replacelist")
+    print(disc_replacelist)   
+    
+ #for years of operation
+    for j in range(num_years):
+        cost_elec_buy.append(sellbuy[j][1])
+        cost_elec_sell.append(sellbuy[j][0]*selling_electricityprice)
+
+
+        #tallying
+        
+        yearly_net.append(cost_elec_sell[j]+income(num_spaces)-cost_elec_buy[j]-repayment[j]- annualmaintain(num_bays) -disc_replacelist[j])
+
+#include zeroth year no loan
+    zeroth=-initialinvest
+    
+    yearly_net=[zeroth]+yearly_net
     
     
-    elec_buy=list(chain.from_iterable([-sum(energydeficit(num_PVperstructure,efficiencyPV,proportionEV))]*(num_years+1)))
-    elec_sell=list(chain.from_iterable([sum(energydemand(proportionEV))]*(num_years+1)))
-    
-    duration_structure = loan_duration+staggerpart1-2
-    duration_pvsystem = loan_duration+staggerpart2-2    
-    repayment_structure = fixedloanrepayment(structurecost(num_PVstructure),loan_interest,loan_duration,staggerpart1,cost_freight,0)+[0]*(num_years-duration_structure)
-    repayment_pvsystem = fixedloanrepayment(pvsystemcost(num_PVstructure),loan_interest,loan_duration,staggerpart2,cost_freight,discountpvwithtime)+[0]*(num_years-duration_pvsystem)
- 
-    repayment=list(map(add,repayment_structure,repayment_pvsystem))
- 
-    for j in range(len(elec_buy)):
-        cost_elec_buy.append(elec_buy[j]*buying_electricitycost)
-        cost_elec_sell.append(elec_sell[j]*selling_electricityprice)
-        yearly_net.append(cost_elec_sell[j]+income(num_spaces)-cost_elec_buy[j]-repayment[j]- maintenance)
-            
-    
-    
-    
-    #discounting and tallying
+    #discounting 
     """not discounted properly"""
+    #apply discount factor
     discounted_yearly_net=[]
+    #running total
     accumulated_discount=[]
     for i in range(num_years+1):
         discount.append(discountfactor(cost_of_borrowing,inflation_cpi,i))
@@ -116,8 +135,17 @@ def npv(num_PVstructure,selling_electricityprice,staggerpart1,staggerpart2):
     npv= sum(discounted_yearly_net)
     print("npv")
     print(npv)
-
-    return npv
+    print("irr")
+    irr=np.irr(yearly_net)
+    print(irr)
+    print("loan/minumum working capital")
+    print(-1*min(accumulated_discount))
+    return irr
 
 #print(numpy.irr(annualbalance))
 
+
+
+#listsellbuy(10,0.965,0.993125,0.1807,100,0.25)
+
+#npv(100,0.32,0.25)
