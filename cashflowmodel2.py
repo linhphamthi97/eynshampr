@@ -75,7 +75,7 @@ def npv(num_bays,selling_electricityprice,dt):
 
     initialinvest=initial(num_bays)
     
-    loan=int(initialinvest)
+    loan=int(initialinvest)+0.2*90000
     #loan repayment, first parameter is loan value, this will be changed iteratively so that npv never falls below zero for any year
     repayment= fixedloanrepayment(loan,loan_interest,loan_duration)+[0]*(num_years-loan_duration)
 #replacements
