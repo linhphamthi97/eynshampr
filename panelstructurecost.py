@@ -13,12 +13,13 @@ def initial(num_bays):
     temporarysite=costlabour*0.1
     installation=83.84
     lighting=418.80/3
+    chargepoint=1800
     #cost for solar power system per additional bay
     additionalsystem=1555.09
     #cost for solar power system for whole plant
     wholeplant=804.42
     
-    initial= (materials+installation+temporarysite+additionalsystem+lighting)*num_bays+wholeplant
+    initial= (materials+installation+temporarysite+additionalsystem+lighting+chargepoint)*num_bays+wholeplant
     return initial
 
 
