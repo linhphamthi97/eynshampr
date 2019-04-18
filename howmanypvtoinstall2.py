@@ -14,10 +14,10 @@ netpresentvalue=[]
 for j in range(1):
     netpresentvalue.append([])
     
-    for i in np.linspace(200,250,5):
-        netpresentvalue[j].append(cashflowmodel2.npv(i,0.32,12))
+    for i in np.linspace(250,350,10):
+        netpresentvalue[j].append(cashflowmodel2.npv(i,0.32,1))
         
-x = np.linspace(200,250,5)
+x = np.linspace(250,350,10)
 plt.plot(x,netpresentvalue[0], '-b')
 
 #plt.plot(netpresentvalue[2], '-g', label='0.23')
@@ -29,7 +29,7 @@ plt.title('IRR - no. structures installed')
 plt.ylabel('IRR')
 plt.xlabel('number of structures installed')      
 plt.legend(loc='upper right')
-
+plt.rcParams["figure.figsize"] = [32,18]
 #for i in range(0,8,2): 
 max_value = max(netpresentvalue[0])
 max_index = netpresentvalue[0].index(max_value)
