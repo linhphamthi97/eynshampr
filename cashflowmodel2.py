@@ -90,9 +90,7 @@ def npv(num_bays,selling_electricityprice,dt):
         pvdisc.append((1-discountpvwithtime)**(i))
        
         disc_replacelist.append(replacelist[i]*pvdisc[i])
-    
-    print("replacelist")
-    print(disc_replacelist)   
+ 
     
  #for years of operation
     for j in range(num_years):
@@ -128,17 +126,16 @@ def npv(num_bays,selling_electricityprice,dt):
         if i==0:
             accumulated_discount.append(discounted_yearly_net[i])
             taxpaid.append(0)
+        #AIA will surpass all income therefore no tax paid in this year
+        elif i%10==0:
+            taxpaid.append(0)
+            accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
             
         else:           
             if discounted_yearly_net[i]<=0:
                 taxpaid.append(0)
-                #AIA This is good enough since only time dicountedyearlynet is negative is for capital purchases 
-                if discounted_yearly_net[i]<-200000:
-                    taxloss=taxloss-200000    
-                else:    
-                    taxloss=taxloss+discounted_yearly_net[i]    
+                taxloss=taxloss+discounted_yearly_net[i]    
                  #tax=======
-                 
             elif discounted_yearly_net[i]>0:
                             
                 if discounted_yearly_net[i]+taxloss>0:
@@ -150,9 +147,10 @@ def npv(num_bays,selling_electricityprice,dt):
                 else:
                     taxpaid.append(0)
                     taxloss=discounted_yearly_net[i]+taxloss
-                    
+            
                 #==========    
-        accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
+            accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
+            
         
     print("discounted yearly net")
  
@@ -169,6 +167,8 @@ def npv(num_bays,selling_electricityprice,dt):
     print(irr)
     print("loan/minumum working capital")
     print(-1*min(accumulated_discount))
+    print(loan)
+    print(taxpaid)
     return irr
 
 #print(numpy.irr(annualbalance))
