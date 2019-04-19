@@ -66,7 +66,7 @@ def npv(num_bays,selling_electricityprice,dt):
     
     #buying and selling electricity
     #assuming same every year(no change in number of EVs)
-    sellbuy=listsellbuy(10,0.965,0.993125,0.1807,num_bays,dt)
+    sellbuy=listsellbuy(10,0.965,0.993125,0.1807,100,dt)
     cost_elec_buy=[]
     cost_elec_sell=[]
     """yearly net cost sell - cost buy - loan repayment (- maintenance) etc."""
@@ -108,7 +108,7 @@ def npv(num_bays,selling_electricityprice,dt):
     zeroth=-initialinvest
     
     yearly_net=[zeroth]+yearly_net
-   
+    
     
     #discounting 
     """not discounted properly"""
@@ -116,42 +116,17 @@ def npv(num_bays,selling_electricityprice,dt):
     discounted_yearly_net=[]
     #running total
     accumulated_discount=[]
-    
-   
-    taxpaid=[]
-    taxloss=0
     for i in range(num_years+1):
         discount.append(discountfactor(cost_of_borrowing,inflation_cpi,i))
         
         discounted_yearly_net.append(yearly_net[i]*discount[i])
-        
         if i==0:
             accumulated_discount.append(discounted_yearly_net[i])
-            taxpaid.append(0)
-            
-        else:           
-            if discounted_yearly_net[i]<=0:
-                taxpaid.append(0)
-                taxloss=taxloss+discounted_yearly_net[i]    
-                 #tax=======
-                 
-            elif discounted_yearly_net[i]>0:
-                            
-                if discounted_yearly_net[i]+taxloss>0:
-                            #tax 0.17
-                    taxpaid.append((discounted_yearly_net[i]+taxloss)*0.17)
-                    discounted_yearly_net[i]=discounted_yearly_net[i]-(discounted_yearly_net[i]+taxloss)*0.17
-                    taxloss=0
-                 
-                else:
-                    taxpaid.append(0)
-                    taxloss=discounted_yearly_net[i]+taxloss
-                    
-                #==========    
-        accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
+        else:
+            accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
         
     print("discounted yearly net")
- 
+    
     print(discounted_yearly_net)
     print("accumulated discount")
     
