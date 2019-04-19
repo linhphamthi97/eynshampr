@@ -102,7 +102,11 @@ for i in range(num_years+1):
     else:           
         if discounted_yearly_net[i]<=0:
             taxpaid.append(0)
-            taxloss=taxloss+discounted_yearly_net[i]    
+            #AIA This is good enough since only time dicountedyearlynet is negative is for capital purchases 
+            if discounted_yearly_net[i]<-200000:
+                taxloss=taxloss-200000    
+            else:    
+                taxloss=taxloss+discounted_yearly_net[i]    
              #tax=======
              
         elif discounted_yearly_net[i]>0:
@@ -119,8 +123,7 @@ for i in range(num_years+1):
                 
             #==========    
     accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
-    
-print("discounted yearly net")
+    print("discounted yearly net")
 
 print(discounted_yearly_net)
 print("accumulated discount")

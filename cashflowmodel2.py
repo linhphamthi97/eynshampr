@@ -132,7 +132,11 @@ def npv(num_bays,selling_electricityprice,dt):
         else:           
             if discounted_yearly_net[i]<=0:
                 taxpaid.append(0)
-                taxloss=taxloss+discounted_yearly_net[i]    
+                #AIA This is good enough since only time dicountedyearlynet is negative is for capital purchases 
+                if discounted_yearly_net[i]<-200000:
+                    taxloss=taxloss-200000    
+                else:    
+                    taxloss=taxloss+discounted_yearly_net[i]    
                  #tax=======
                  
             elif discounted_yearly_net[i]>0:
