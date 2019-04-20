@@ -51,7 +51,7 @@ repayment= fixedloanrepayment(loan,loan_interest,loan_duration)+[0]*(num_years-l
 #replacements
 #hardcoded for 30 years
 replacelist=[0]*9+[replace(num_bays)]
-replacelist= [0]+replacelist*3
+replacelist= replacelist*3
 
 #replacement with discounting
 pvdisc=[]

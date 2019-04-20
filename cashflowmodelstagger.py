@@ -42,6 +42,7 @@ def listsellbuy(lifespan,eff_decfirst,eff_dec,start_eff,bays,dt):
         listsellbuy.append(main.results())
         
         i+=1
+    i=0
     while i<lifespan:
         if i==1:
             eff=eff*eff_decfirst
@@ -53,6 +54,7 @@ def listsellbuy(lifespan,eff_decfirst,eff_dec,start_eff,bays,dt):
         listsellbuy.append(main.results())
         
         i+=1
+    i=0
     while i<lifespan:
         if i==1:
             eff=eff*eff_decfirst
@@ -65,10 +67,13 @@ def listsellbuy(lifespan,eff_decfirst,eff_dec,start_eff,bays,dt):
         
         i+=1
     
-    print(lifespan)
+
     print(listsellbuy)
     return listsellbuy
+
     
+
+
 def npv(num_bays,selling_electricityprice,dt):
 
     num_years = 30
@@ -81,7 +86,7 @@ def npv(num_bays,selling_electricityprice,dt):
     """ data for economy """
     inflation_cpi=0.02
     cost_of_borrowing=0.055
-    discountpvwithtime=0.02333
+    #discountpvwithtime=0.02333
     
     
     loan_interest=0.1
@@ -91,43 +96,48 @@ def npv(num_bays,selling_electricityprice,dt):
     
     #buying and selling electricity
     #assuming(no change in number of EVs
-    
+    #num bays to be installed linear increase
     sellbuy=listsellbuy(10,0.965,0.993125,0.1807,num_bays,dt)
     cost_elec_buy=[]
     cost_elec_sell=[]
     """yearly net cost sell - cost buy - loan repayment (- maintenance) etc."""
+
+    
     yearly_net=[]
     
 
-    initialinvest=initial(num_bays)
+    initialinvest=initial(num_bays,0)
     
-    loan=int(initialinvest)+0.2*90000+57692
+    loan=int(initialinvest)+0.2*80000+57692
     #loan repayment, first parameter is loan value, this will be changed iteratively so that npv never falls below zero for any year
     repayment= fixedloanrepayment(loan,loan_interest,loan_duration)+[0]*(num_years-loan_duration)
 #replacements
     #hardcoded for 30 years
-    replacelist=[0]*9+[replace(num_bays)]
-    replacelist= [0]+replacelist*3
+    replacelist=[0]*9+[replace(num_bays,10)]+[0]*9+[replace(num_bays,20)]+[0]*9+[0]
+   
 
     #replacement with discounting
-    pvdisc=[]
-    disc_replacelist=[]
-    for i in range(num_years):
-        pvdisc.append((1-discountpvwithtime)**(i))
-       
-        disc_replacelist.append(replacelist[i]*pvdisc[i])
- 
     
  #for years of operation
     for j in range(num_years):
+        capital=0
+        if j==10:
+            num_bays=2*num_bays
+        elif j==9:
+            capital=initial(num_bays,j+1)
+        elif j==20:
+            num_bays=1.5*num_bays
+        elif j==19:    
+            capital=initial(num_bays,j+1)
         cost_elec_buy.append(sellbuy[j][1])
         cost_elec_sell.append(sellbuy[j][0]*selling_electricityprice)
+        
 
 
         #tallying
         
-        yearly_net.append(cost_elec_sell[j]+income(num_spaces)-cost_elec_buy[j]-repayment[j]- annualmaintain(num_bays) -disc_replacelist[j])
-
+        yearly_net.append(cost_elec_sell[j]+income(num_spaces)-cost_elec_buy[j]-repayment[j]- annualmaintain(num_bays) -replacelist[j] -capital)
+        
 #include zeroth year no loan
     zeroth=-initialinvest
     
