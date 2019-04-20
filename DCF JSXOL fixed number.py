@@ -18,7 +18,7 @@ from replacement import replace
 
 num_years = 30
 selling_electricityprice=0.32
-num_bays=316
+num_bays=342
 """data about car park"""
 num_spaces=1000
 
@@ -63,8 +63,8 @@ for i in range(num_years):
 
 print("replacelist")
 print(disc_replacelist)   
-sellbuy=[[672285, 35470], [675648, 35586], [673078, 35523], [673664, 35729], [669409, 35538], [670268, 35820], [668773, 36200], [668943, 36238], [667677, 36062], [667270, 36423], [672285, 35470], [675648, 35586], [673078, 35523], [673664, 35729], [669409, 35538], [670268, 35820], [668773, 36200], [668943, 36238], [667677, 36062], [667270, 36423], [672285, 35470], [675648, 35586], [673078, 35523], [673664, 35729], [669409, 35538], [670268, 35820], [668773, 36200], [668943, 36238], [667677, 36062], [667270, 36423]]
- #for years of operation
+sellbuy=[[671737, 34812], [669863, 35351], [672483, 35172], [670333, 35028], [672089, 35289], [673676, 35519], [670410, 35747], [671753, 36087], [669169, 36049], [666288, 36198], [671737, 34812], [669863, 35351], [672483, 35172], [670333, 35028], [672089, 35289], [673676, 35519], [670410, 35747], [671753, 36087], [669169, 36049], [666288, 36198], [671737, 34812], [669863, 35351], [672483, 35172], [670333, 35028], [672089, 35289], [673676, 35519], [670410, 35747], [671753, 36087], [669169, 36049], [666288, 36198]]
+#for years of operation
 for j in range(num_years):
     cost_elec_buy.append(sellbuy[j][1])
     cost_elec_sell.append(sellbuy[j][0]*selling_electricityprice)
@@ -98,17 +98,16 @@ for i in range(num_years+1):
     if i==0:
         accumulated_discount.append(discounted_yearly_net[i])
         taxpaid.append(0)
+    #AIA will surpass all income therefore no tax paid in this year
+    elif i%10==0:
+        taxpaid.append(0)
+        accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
         
     else:           
         if discounted_yearly_net[i]<=0:
             taxpaid.append(0)
-            #AIA This is good enough since only time dicountedyearlynet is negative is for capital purchases 
-            if discounted_yearly_net[i]<-200000:
-                taxloss=taxloss-200000    
-            else:    
-                taxloss=taxloss+discounted_yearly_net[i]    
+            taxloss=taxloss+discounted_yearly_net[i]    
              #tax=======
-             
         elif discounted_yearly_net[i]>0:
                         
             if discounted_yearly_net[i]+taxloss>0:
@@ -120,9 +119,10 @@ for i in range(num_years+1):
             else:
                 taxpaid.append(0)
                 taxloss=discounted_yearly_net[i]+taxloss
-                
+        
             #==========    
-    accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
+        accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
+        
     print("discounted yearly net")
 
 print(discounted_yearly_net)
@@ -135,20 +135,26 @@ print("npv")
 print(npv)
 print("loan/minumum working capital")
 print(-1*min(accumulated_discount))
+print(loan)
 print("irr")
 irr=np.irr(yearly_net)
 print(irr)
-"""
-x = range(280,380)
-plt.plot(x,netpresentvalue[0], '-b')
 
-#plt.plot(netpresentvalue[2], '-g', label='0.23')
-
-#plt.plot(netpresentvalue[4], '-c', label='0.25')
-
+x = range(2020,2051)
+plt.figure()
+plt.plot(x,accumulated_discount, '-b')
 #plt.plot(netpresentvalue[6], '-k', label='0.27')
-plt.title('IRR - no. structures installed')
-plt.ylabel('IRR')
-plt.xlabel('number of structures installed')      
+plt.title('Accumulated discounted cash flow with time')
+plt.ylabel('Accumulate DCF')
+plt.xlabel('Year')      
 plt.legend(loc='upper right')
-"""
+
+
+plt.figure()
+
+plt.plot(x,discounted_yearly_net, '-b')
+#plt.plot(netpresentvalue[6], '-k', label='0.27')
+plt.title('Annual discounted cash flow with time')
+plt.ylabel('Annual DCF')
+plt.xlabel('Year')      
+plt.legend(loc='upper right')

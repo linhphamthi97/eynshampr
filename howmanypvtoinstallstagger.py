@@ -5,7 +5,7 @@ Created on Mon Feb 25 11:04:16 2019
 @author: neilw
 """
 import matplotlib.pyplot as plt
-import cashflowmodel2 
+import cashflowmodelstagger 
 import numpy as np
 
 
@@ -15,7 +15,7 @@ for j in range(1):
     netpresentvalue.append([])
     
     for i in np.linspace(332,360,4):
-        netpresentvalue[j].append(cashflowmodel2.npv(i,0.32,1))
+        netpresentvalue[j].append(cashflowmodelstagger.npv(i,0.32,1))
         
 x = np.linspace(332,360,4)
 plt.plot(x,netpresentvalue[0], '-b')

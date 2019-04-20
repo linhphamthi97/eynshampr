@@ -22,10 +22,12 @@ from replacement import replace
 #bays=100
 #dt=0.25
 # 10 year lifespan of solar pv
+# building an extra bays number of bays at each replacement and replacing old bays
 def listsellbuy(lifespan,eff_decfirst,eff_dec,start_eff,bays,dt):
     lifespan = lifespan
     start_eff= start_eff
     eff_dec=eff_dec
+    bays=bays
     i=0
     eff = start_eff
     listsellbuy = []
@@ -40,9 +42,32 @@ def listsellbuy(lifespan,eff_decfirst,eff_dec,start_eff,bays,dt):
         listsellbuy.append(main.results())
         
         i+=1
+    while i<lifespan:
+        if i==1:
+            eff=eff*eff_decfirst
+        else:
+            eff=eff*eff_dec**i
+        if listsellbuy==None or listsellbuy=="": 
+            pass
+        main.variable(eff,2*bays,dt)
+        listsellbuy.append(main.results())
+        
+        i+=1
+    while i<lifespan:
+        if i==1:
+            eff=eff*eff_decfirst
+        else:
+            eff=eff*eff_dec**i
+        if listsellbuy==None or listsellbuy=="": 
+            pass
+        main.variable(eff,3*bays,dt)
+        listsellbuy.append(main.results())
+        
+        i+=1
     
-    print(listsellbuy*3)
-    return listsellbuy*3
+    print(lifespan)
+    print(listsellbuy)
+    return listsellbuy
     
 def npv(num_bays,selling_electricityprice,dt):
 
@@ -65,7 +90,8 @@ def npv(num_bays,selling_electricityprice,dt):
     discount=[]
     
     #buying and selling electricity
-    #assuming same every year(no change in number of EVs)
+    #assuming(no change in number of EVs
+    
     sellbuy=listsellbuy(10,0.965,0.993125,0.1807,num_bays,dt)
     cost_elec_buy=[]
     cost_elec_sell=[]
