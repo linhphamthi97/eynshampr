@@ -14,10 +14,10 @@ netpresentvalue=[]
 for j in range(1):
     netpresentvalue.append([])
     
-    for i in np.linspace(110,140,4):
+    for i in np.linspace(232,232,1):
         netpresentvalue[j].append(cashflowmodelstagger.npv(i,0.32,1))
         
-x = np.linspace(110,140,3)
+x = np.linspace(2020,2050,31)
 plt.plot(x,netpresentvalue[0], '-b')
 
 #plt.plot(netpresentvalue[2], '-g', label='0.23')
@@ -30,10 +30,6 @@ plt.ylabel('IRR')
 plt.xlabel('number of bays installed')      
 plt.legend(loc='upper right')
 
-#for i in range(0,8,2): 
-max_value = max(netpresentvalue[0])
-max_index = netpresentvalue[0].index(max_value)
-print(max_index)
 
 
 

@@ -44,7 +44,7 @@ def listsellbuy(lifespan,eff_decfirst,eff_dec,start_eff,bays,dt):
     print(listsellbuy*3)
     return listsellbuy*3
     
-def npv(num_bays,selling_electricityprice,dt):
+def npv(num_bayz,selling_electricityprice,dt):
 
     num_years = 30
     
@@ -66,17 +66,28 @@ def npv(num_bays,selling_electricityprice,dt):
     
     #buying and selling electricity
     #assuming same every year(no change in number of EVs)
-    sellbuy=listsellbuy(10,0.965,0.993125,0.1807,num_bays,dt)
+    sellbuy=listsellbuy(10,0.965,0.993125,0.1807,num_bayz,dt)
     cost_elec_buy=[]
     cost_elec_sell=[]
     """yearly net cost sell - cost buy - loan repayment (- maintenance) etc."""
     yearly_net=[]
     
 
-    initialinvest=initial(num_bays,0)
+    initialinvest=initial(num_bayz,0)+57692
     
-    loan=int(initialinvest)+0.2*90000+57692
+    loan=int(initialinvest)+0.2*90000
     #loan repayment, first parameter is loan value, this will be changed iteratively so that npv never falls below zero for any year
+
+    num_bays=num_bayz
+
+    
+    cost_elec_buy=[]
+    cost_elec_sell=[]
+    discount=[]
+    yearly_net=[]
+
+    
+
     repayment= fixedloanrepayment(loan,loan_interest,loan_duration)+[0]*(num_years-loan_duration)
 #replacements
     #hardcoded for 30 years
@@ -132,16 +143,17 @@ def npv(num_bays,selling_electricityprice,dt):
             accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
             
         else:           
-            if discounted_yearly_net[i]<=0:
+            if yearly_net[i]<=0:
                 taxpaid.append(0)
                 taxloss=taxloss+discounted_yearly_net[i]    
                  #tax=======
-            elif discounted_yearly_net[i]>0:
+            elif yearly_net[i]>0:
                             
                 if discounted_yearly_net[i]+taxloss>0:
                             #tax 0.17
                     taxpaid.append((discounted_yearly_net[i]+taxloss)*0.17)
-                    discounted_yearly_net[i]=discounted_yearly_net[i]-(discounted_yearly_net[i]+taxloss)*0.17
+                    yearly_net[i]=yearly_net[i]-(discounted_yearly_net[i]+taxloss)*0.17
+                    discounted_yearly_net[i]=yearly_net[i]*discount[i]
                     taxloss=0
                  
                 else:
@@ -150,8 +162,20 @@ def npv(num_bays,selling_electricityprice,dt):
             
                 #==========    
             accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
-            
+
+
+    print('cost_elec_buy')    
+    print(cost_elec_buy) 
+    
+    print('cost_elec_sell')    
+    print(cost_elec_sell) 
         
+    print('repay')    
+    print(repayment) 
+        
+    print('maintain')    
+    print(annualmaintain(num_bays)) 
+    
     print("discounted yearly net")
  
     print(discounted_yearly_net)

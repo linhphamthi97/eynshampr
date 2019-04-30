@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Feb 10 21:10:31 2019
+Created on Wed Apr 24 18:41:22 2019
 
 @author: neilw
 """
+
+import matplotlib.pyplot as plt
 import numpy as np
 #import matplotlib.pyplot as plt
 #import pandas as pd
@@ -11,81 +13,25 @@ from discountfactor import discountfactor
 from income import income
 from initialinvest import initial
 from loanrepayment import fixedloanrepayment
-import main
+
 from maintain import annualmaintain
 from replacement import replace
 
-#lifespan=10
-#eff_decfirst=0.965
-#eff_dec=0.993125
-#start_eff=0.1807
-#bays=100
-#dt=0.25
-# 10 year lifespan of solar pv
-# building an extra bays number of bays at each replacement and replacing old bays
-def listsellbuy(lifespan,eff_decfirst,eff_dec,start_eff,bays,dt):
-    lifespan = lifespan
-    start_eff= start_eff
-    eff_dec=eff_dec
-    bays=bays
-    i=0
-    eff = start_eff
-    listsellbuy = []
-    while i<lifespan:
-        if i==1:
-            eff=eff*eff_decfirst
-        else:
-            eff=eff*eff_dec**i
-        if listsellbuy==None or listsellbuy=="": 
-            pass
-        main.variable(eff,bays,dt)
-        listsellbuy.append(main.results())
-        
-        i+=1
-    i=0
-    while i<lifespan:
-        if i==1:
-            eff=eff*eff_decfirst
-        else:
-            eff=eff*eff_dec**i
-        if listsellbuy==None or listsellbuy=="": 
-            pass
-        main.variable(eff,2*bays,dt)
-        listsellbuy.append(main.results())
-        
-        i+=1
-    i=0
-    while i<lifespan:
-        if i==1:
-            eff=eff*eff_decfirst
-        else:
-            eff=eff*eff_dec**i
-        if listsellbuy==None or listsellbuy=="": 
-            pass
-        main.variable(eff,3*bays,dt)
-        listsellbuy.append(main.results())
-        
-        i+=1
-    
 
-    print(listsellbuy)
-    return listsellbuy
-
-    
+num_bayz=232
+selling_electricityprice=0.32
+npvlist=[]
+num_years = 30
 
 
-def npv(num_bayz,selling_electricityprice,dt):
-    
-    num_years = 30
-    
-    
-    """data about car park"""
-    num_spaces=1000
+"""data about car park"""
+num_spaces=1000
 
-    
-    """ data for economy """
-    inflation_cpi=0.02
-    cost_of_borrowing=0.055
+
+""" data for economy """
+inflation_cpi=0
+for i in np.linspace(0,0.1,101):
+    cost_of_borrowing=i
     #discountpvwithtime=0.02333
     
     
@@ -101,7 +47,6 @@ def npv(num_bayz,selling_electricityprice,dt):
     #num bays to be installed linear increase
     #sellbuy=listsellbuy(10,0.965,0.993125,0.1807,num_bayz,dt)
     sellbuy=[[669541, 36671], [664431, 36657], [663012, 36424], [666815, 37109], [666308, 36785], [663959, 37035], [663782, 37503], [661451, 37221], [656414, 38117], [660006, 38369], [671656, 35107], [671834, 35434], [672638, 35379], [671224, 35340], [673236, 35575], [669907, 35487], [673312, 35986], [667458, 35805], [669366, 35973], [668255, 36356], [676070, 35186], [671640, 35096], [673404, 35078], [671294, 35507], [674479, 35494], [671694, 35536], [670452, 35151], [672620, 35952], [670016, 35711], [666825, 36535]]
-
     cost_elec_buy=[]
     cost_elec_sell=[]
     """yearly net cost sell - cost buy - loan repayment (- maintenance) etc."""
@@ -127,7 +72,7 @@ def npv(num_bayz,selling_electricityprice,dt):
     yearly_net=[]
 
     
-    repayment= fixedloanrepayment(loan,loan_interest,loan_duration)+[0]*11
+    repayment= fixedloanrepayment(loan,loan_interest,loan_duration)+fixedloanrepayment(30,loan_interest,loan_duration)
 #replacements
     #hardcoded for 30 years
     replacelist=[0]*9+[replace(num_bays,10)]+[0]*9+[replace(num_bays,20)]+[0]*9+[0]
@@ -159,16 +104,11 @@ def npv(num_bayz,selling_electricityprice,dt):
     zeroth=-initialinvest
     
     yearly_net=[zeroth]+yearly_net
-    print(yearly_net[1])
-    print(cost_elec_sell[0])
-    print(cost_elec_sell)
-    print(income(num_spaces))
-    print(cost_elec_buy[0])
-    print(repayment[0])
-    print(annualmaintain(num_bays))
-    print(replacelist[0])
-    print(cost_elec_sell[0]+income(num_spaces)-cost_elec_buy[0]-repayment[0]- annualmaintain(num_bays) -replacelist[0])
-
+   
+    
+    
+    
+    
     
     #discounting 
     
@@ -194,34 +134,33 @@ def npv(num_bayz,selling_electricityprice,dt):
             accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
             
         else:           
-            if yearly_net[i]<=0:
-                taxpaid.append(0)
-                taxloss=taxloss+discounted_yearly_net[i]    
-                 #tax=======
-            elif yearly_net[i]>0:
-                            
-                if discounted_yearly_net[i]+taxloss>0:
-                            #tax 0.17
-                    taxpaid.append((discounted_yearly_net[i]+taxloss)*0.17)
-                    yearly_net[i]=yearly_net[i]-(discounted_yearly_net[i]+taxloss)*0.17
-                    discounted_yearly_net[i]=yearly_net[i]*discount[i]
-                    taxloss=0
-                 
-                else:
+                if yearly_net[i]<=0:
                     taxpaid.append(0)
-                    taxloss=discounted_yearly_net[i]+taxloss
-            
-                #==========    
-            accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
-
-
+                    taxloss=taxloss+discounted_yearly_net[i]    
+                     #tax=======
+                elif yearly_net[i]>0:
+                                
+                    if discounted_yearly_net[i]+taxloss>0:
+                                #tax 0.17
+                        taxpaid.append((discounted_yearly_net[i]+taxloss)*0.17)
+                        yearly_net[i]=yearly_net[i]-(discounted_yearly_net[i]+taxloss)*0.17
+                        discounted_yearly_net[i]=yearly_net[i]*discount[i]
+                        taxloss=0
+                     
+                    else:
+                        taxpaid.append(0)
+                        taxloss=discounted_yearly_net[i]+taxloss
+                
+                    #==========    
+                accumulated_discount.append(discounted_yearly_net[i]+accumulated_discount[i-1])
         
+                
 
     
-    print(yearly_net)
+
     print("discounted yearly net")
  
-    print(discounted_yearly_net)
+    print(yearly_net)
     print("accumulated discount")
     
     print(accumulated_discount)
@@ -233,11 +172,26 @@ def npv(num_bayz,selling_electricityprice,dt):
     irr=np.irr(yearly_net)
     print(irr)
     print("loan/minumum working capital")
+    print(-1*min(accumulated_discount))
+    print(loan)
     print(taxpaid)
-    return accumulated_discount
+    npvlist.append(npv)
+    print(npvlist)
 
 #print(numpy.irr(annualbalance))
 
+x = np.linspace(0,0.1,101)
+plt.plot(x,npvlist, '-b')
+
+#plt.plot(netpresentvalue[2], '-g', label='0.23')
+
+#plt.plot(netpresentvalue[4], '-c', label='0.25')
+
+#plt.plot(netpresentvalue[6], '-k', label='0.27')
+plt.title('NPV - discount factor')
+plt.ylabel('NPV')
+plt.xlabel('discount factor')      
+plt.legend(loc='upper right')
 
 
 #listsellbuy(10,0.965,0.993125,0.1807,100,0.25)

@@ -14,10 +14,10 @@ netpresentvalue=[]
 for j in range(1):
     netpresentvalue.append([])
     
-    for i in np.linspace(332,360,4):
+    for i in np.linspace(0,100,5):
         netpresentvalue[j].append(cashflowmodel2.npv(i,0.32,1))
         
-x = np.linspace(332,360,4)
+x = np.linspace(0,100,5)
 plt.plot(x,netpresentvalue[0], '-b')
 
 #plt.plot(netpresentvalue[2], '-g', label='0.23')
